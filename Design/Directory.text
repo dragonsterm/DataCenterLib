@@ -1,0 +1,35 @@
+DataCenterProject/
+├── src/
+│   ├── main/
+│   │   └── Main.java
+│   │
+│   ├── model/
+│   │   ├── IMonitorable.java
+│   │   ├── IManageable.java
+│   │   ├── HardwareEquipment.java
+│   │   ├── ComputingDevice.java
+│   │   ├── Server.java
+│   │   ├── GridLocation.java
+│   │   ├── ServerRack.java
+│   │   └── DataCenterRoom.java
+│   │
+│   ├── dao/
+│   │   ├── ICRUD.java
+│   │   ├── DatabaseConnection.java
+│   │   └── ServerDAO.java
+│   │
+│   ├── thread/
+│   │   ├── MonitorThread.java
+│   │   └── BatchOperationThread.java
+│   │
+│   ├── controller/
+│   │   ├── MainController.java
+│   │   ├── RackController.java
+│   │   └── ServerController.java
+│   │
+│   └── view/
+│       ├── MainDashboardView.java
+│       ├── RackDetailView.java
+│       ├── BatchServerFormView.java
+│       ├── BatchProgressDialog.java
+│       └── ServerDetailView.java
