@@ -93,12 +93,12 @@ public class ServerDetailView extends JPanel {
         return btnSetUtil;
     }
 
-    public JTextField getTxtInputCpu() {
-        return txtInputCpu;
+    public String getInputCpu() {
+        return txtInputCpu.getText();
     }
 
-    public JTextField getTxtInputRam() {
-        return txtInputRam;
+    public String getInputRam() {
+        return txtInputRam.getText();
     }
 
     public String getSelectedStatus() {
