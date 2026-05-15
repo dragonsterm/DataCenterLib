@@ -21,28 +21,54 @@ public class RackDetailView extends JDialog {
     private JButton btnBatchMove;
     private JButton btnShowDetail;
     private JToggleButton[] slotButtons;
+    
+    private JLabel lblRackInfo;
+    private JLabel lblRackZone;
+    private JLabel lblInstruction;
+    private JPanel actionPanel;
 
 
     public RackDetailView() {
         setTitle("Rack Detail");
-        setSize(600, 600);
+        setSize(600, 650);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        JPanel topPanel = new JPanel();
-        btnBatchAdd = new JButton("Add");
-        btnBatchUpdate = new JButton("Update");
-        btnBatchMove = new JButton("Move");
-        btnBatchDelete = new JButton("Delete");
+        //  panel top
+        JPanel topInfoPanel = new JPanel();
+        topInfoPanel.setLayout(new BoxLayout(topInfoPanel, BoxLayout.Y_AXIS));
+        topInfoPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        lblRackInfo = new JLabel("Rack ID: - | Capacity: - U");
+        lblRackZone = new JLabel("Location Zone: -");
+        lblRackInfo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblRackZone.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblRackInfo.setFont(new Font("Arial", Font.BOLD, 14));
+        
+        topInfoPanel.add(lblRackInfo);
+        topInfoPanel.add(Box.createVerticalStrut(5));
+        topInfoPanel.add(lblRackZone);
+        add(topInfoPanel, BorderLayout.NORTH);
+
+        // Panel bottom
+        actionPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        lblInstruction = new JLabel("Please click one or more slots/servers for actions.");
+        lblInstruction.setFont(new Font("Arial", Font.ITALIC, 13));
+        
+        btnBatchAdd = new JButton("Batch Add");
+        btnBatchUpdate = new JButton("Batch Update");
+        btnBatchMove = new JButton("Batch Move");
+        btnBatchDelete = new JButton("Batch Delete");
         btnShowDetail = new JButton("Server Detail");
 
-        topPanel.add(btnBatchAdd);
-        topPanel.add(btnBatchUpdate);
-        topPanel.add(btnBatchMove);
-        topPanel.add(btnBatchDelete);
-        topPanel.add(btnShowDetail);
+        actionPanel.add(lblInstruction);
+        actionPanel.add(btnBatchAdd);
+        actionPanel.add(btnBatchUpdate);
+        actionPanel.add(btnBatchMove);
+        actionPanel.add(btnBatchDelete);
+        actionPanel.add(btnShowDetail);
 
-        add(topPanel, BorderLayout.NORTH);
+        add(actionPanel, BorderLayout.SOUTH);
 
         slotsVisualPanel = new JPanel();
         slotsVisualPanel.setLayout(new BoxLayout(slotsVisualPanel, BoxLayout.Y_AXIS));
@@ -54,6 +80,13 @@ public class RackDetailView extends JDialog {
     public void renderRackSlots(ServerRack rack) {
         slotsVisualPanel.removeAll();
         setTitle("Detail Rack: " + rack.getRackId());
+
+        lblRackInfo.setText("Rack Name: " + rack.getRackId() + "  |  Capacity: " + rack.getMaxCapacityU() + " U");
+        if (rack.getLocation() != null) {
+            lblRackZone.setText("Zone: " + rack.getLocation().getZoneName() + 
+                                " - Coordinates: (X: " + rack.getLocation().getxCoordinate() + 
+                                ", Y: " + rack.getLocation().getyCoordinate() + ")");
+        }
 
         String[] slotData = rack.getVisualRepresentation();
         slotButtons = new JToggleButton[slotData.length];
@@ -78,6 +111,8 @@ public class RackDetailView extends JDialog {
             slotsVisualPanel.add(slotBtn);
         }
 
+        fireSelectionChanged();
+        
         slotsVisualPanel.revalidate();
         slotsVisualPanel.repaint();
     }
@@ -110,6 +145,8 @@ public class RackDetailView extends JDialog {
         
         boolean hasEmptySelected = !emptySelected.isEmpty();
         boolean hasOccupiedSelected = !occupiedSelected.isEmpty();
+        
+        lblInstruction.setVisible(false);
 
         if (hasOccupiedSelected && !hasEmptySelected) {
             btnBatchAdd.setVisible(false);
@@ -124,7 +161,8 @@ public class RackDetailView extends JDialog {
             btnBatchDelete.setVisible(false);
             btnShowDetail.setVisible(false);
         } else {
-            btnBatchAdd.setVisible(true);
+            lblInstruction.setVisible(true);
+            btnBatchAdd.setVisible(false);
             btnBatchUpdate.setVisible(false);
             btnBatchMove.setVisible(false);
             btnBatchDelete.setVisible(false);
