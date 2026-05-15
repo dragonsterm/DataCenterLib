@@ -101,7 +101,7 @@ public class ServerDetailView extends JPanel {
     public void displayServerStats(Server s) {
         if(s == null) return;
         lblServerId.setText("ID: " + s.getIdAsset() + " | Model: " + s.getModelName());
-        lblCpuName.setText("CPU Name: " + (s.getCpuName() != null ? s.getCpuName() : "Unknown") + " | Cores: " + s.getCpuCores());
+        lblCpuName.setText("CPU Name: " + (s.getCpuName() != null ? s.getCpuName() : "Unknown") + " | Cores: " + s.getCpuCores() + " | RAM: " + s.getTotalRamGB() + " GB");
         lblOsType.setText("OS: " + s.getOsType() + " | Storage: " + s.getTotalStorageGB() + " GB");
         
         cbStatus.setSelectedItem(s.getStatus());
