@@ -58,7 +58,7 @@ public class MainController {
                         btnRack.addActionListener(e -> onRackClicked(rack.getRackId()));
                         grid.add(btnRack);
                     } else {
-                        JButton btnEmpty = new JButton("+ Tambah Rak");
+                        JButton btnEmpty = new JButton("Insert Rack");
                         btnEmpty.setBorder(BorderFactory.createDashedBorder(Color.GRAY, 2, 5, 2, false));
                         btnEmpty.setBackground(Color.decode("#f5f5f5"));
                         btnEmpty.setForeground(Color.GRAY);
