@@ -35,7 +35,7 @@ public class DataCenterRoom {
         return null;
     }
 
-    public List<ServerRack> getRacks() {
+    public List<ServerRack> getAllRacks() {
         return racks;
     }
 

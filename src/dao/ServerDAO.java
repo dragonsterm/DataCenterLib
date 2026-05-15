@@ -16,7 +16,7 @@ import java.util.List;
 public class ServerDAO implements ICRUD<Server> {
     private Connection connection;
 
-    private ServerDAO() {
+    public ServerDAO() {
         this.connection = DatabaseConnector.getInstance().getConnection();
     }
 

@@ -111,7 +111,7 @@ public class BatchServerFormView extends JDialog {
         return cbTargetRack.getSelectedItem() != null ? cbTargetRack.getSelectedItem().toString() : "";
     }
 
-    public JButton getBtnExcute() {
+    public JButton getBtnExecute() {
         return btnExecute;
     }
 
