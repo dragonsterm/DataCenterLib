@@ -78,7 +78,7 @@ public class MainController {
 
     public void onEmptySlotClicked(int slotIndex) {
         JTextField txtRackId = new JTextField();
-        JTextField txtMaxCapacity = new JTextField("42");
+        JTextField txtMaxCapacity = new JTextField("12");
         JTextField txtZone = new JTextField("ZONA A");
 
         Object[] message = {
