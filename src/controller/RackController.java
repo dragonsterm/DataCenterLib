@@ -13,8 +13,10 @@ import view.BatchServerFormView;
 import view.BatchProgressDialog;
 import view.RackDetailView;
 
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -38,10 +40,67 @@ public class RackController {
     }
 
     private void initViewListeners() {
-        rackView.getBtnBatchAdd().addActionListener(e -> openBatchForm("ADD"));
-        rackView.getBtnBatchUpdate().addActionListener(e -> openBatchForm("UPDATE"));
-        rackView.getBtnBatchDelete().addActionListener(e -> openBatchForm("DELETE"));
-        rackView.getBtnBatchMove().addActionListener(e -> openBatchForm("MOVE"));
+        rackView.getBtnBatchAdd().addActionListener(e -> {
+            java.util.List<Integer> selectedSlots = rackView.getSelectedEmptySlots();
+
+            if (selectedSlots.isEmpty()) {
+                JOptionPane.showMessageDialog(rackView, "Silakan klik/pilih minimal 1 slot kosong terlebih dahulu!");
+            } else {
+                openBatchForm("ADD", selectedSlots);
+            }
+        });
+
+        rackView.getBtnBatchUpdate().addActionListener(e -> openBatchForm("UPDATE", rackView.getSelectedOccupiedSlots()));
+        rackView.getBtnBatchMove().addActionListener(e -> openBatchForm("MOVE", rackView.getSelectedOccupiedSlots()));
+        
+        rackView.getBtnBatchDelete().addActionListener(e -> {
+            java.util.List<Integer> selectedSlots = rackView.getSelectedOccupiedSlots();
+            if(!selectedSlots.isEmpty()) {
+                int dialogResult = JOptionPane.showConfirmDialog(rackView, "Apakah Anda yakin ingin menghapus server yang dipilih?", "Konfirmasi Hapus", JOptionPane.YES_NO_OPTION);
+                if(dialogResult == JOptionPane.YES_OPTION) {
+                    List<Server> serversToDelete = new ArrayList<>();
+                    for(int slotIndex : selectedSlots) {
+                        String slotData = rackView.getSlotButtons()[slotIndex].getText();
+                        String serverId = extractServerIdFromSlotData(slotData);
+                        if(serverId != null) {
+                            Server s = serverDAO.read(serverId);
+                            if (s != null) {
+                                s.setRackId(currentRack.getRackId());
+                                s.setStartSlot(slotIndex);
+                                serversToDelete.add(s);
+                            }
+                        }
+                    }
+                    executeBatchOperation("DELETE", serversToDelete, currentRack.getRackId());
+                }
+            }
+        });
+        
+        rackView.getBtnShowDetail().addActionListener(e -> {
+            java.util.List<Integer> selectedSlots = rackView.getSelectedOccupiedSlots();
+            if (selectedSlots.size() == 1) {
+                int slotIndex = selectedSlots.get(0);
+                String slotData = rackView.getSlotButtons()[slotIndex].getText();
+                String serverId = extractServerIdFromSlotData(slotData);
+                if (serverId != null) {
+                    ServerController sc = new ServerController(serverDAO);
+                    sc.loadServerInfo(serverId);
+                }
+            }
+        });
+    }
+
+    private String extractServerIdFromSlotData(String slotData) {
+        try {
+            String[] parts = slotData.split(" - ");
+            if (parts.length > 1) {
+                String rightSide = parts[1];
+                return rightSide.split(" ")[0];
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
     }
 
     public void loadVisualRack(String rackId) {
@@ -49,12 +108,44 @@ public class RackController {
         rackView.setVisible(true);
     }
 
-    public void openBatchForm(String operationType) {
-        batchFormView = new BatchServerFormView(currentRack.getAvailableU(), operationType);
+    public void openBatchForm(String operationType, java.util.List<Integer> selectedSlots) {
+        List<String> availableRackIds = new ArrayList<>();
+        if (roomModel != null && roomModel.getAllRacks() != null) {
+            for (ServerRack r : roomModel.getAllRacks()) {
+                availableRackIds.add(r.getRackId());
+            }
+        }
+        batchFormView = new BatchServerFormView(currentRack.getAvailableU(), operationType, availableRackIds);
+
+        int qty = selectedSlots.size();
+        for (int i = 0; i < qty; i++) {
+            int slotIdx = selectedSlots.get(i);
+            if (operationType.equalsIgnoreCase("ADD")) {
+                batchFormView.addFormRow(null);
+            } else {
+                String slotData = rackView.getSlotButtons()[slotIdx].getText();
+                String serverId = extractServerIdFromSlotData(slotData);
+                Server existingServer = serverDAO.read(serverId);
+                batchFormView.addFormRow(existingServer);
+            }
+        }
+
         batchFormView.getBtnExecute().addActionListener(e -> {
-            List<Server> dataInput = batchFormView.getBatchData();
+            List<model.Server> dataInput = batchFormView.getBatchData();
             String target = batchFormView.getSelectedTargetRack();
+
             if (dataInput != null && !dataInput.isEmpty()) {
+
+                for (int i = 0; i < dataInput.size(); i++) {
+                    Server s = dataInput.get(i);
+                    s.setRackId(currentRack.getRackId());
+
+                    if (selectedSlots != null && i < selectedSlots.size()) {
+                        int slotIndexView = selectedSlots.get(i);
+                        s.setStartSlot(slotIndexView);
+                    }
+                }
+
                 batchFormView.dispose();
                 executeBatchOperation(operationType, dataInput, target);
             }
@@ -62,12 +153,18 @@ public class RackController {
 
         batchFormView.setVisible(true);
     }
+
+
     public void executeBatchOperation(String type, List<Server> servers, String targetRackId) {
         BatchProgressDialog progressDialog = new BatchProgressDialog();
         BatchOperationThread task = new BatchOperationThread(
                 type, servers, targetRackId, currentRack, serverDAO, progressDialog
         );
-
+        if (targetRackId != null && !targetRackId.isEmpty() && roomModel != null) {
+            ServerRack target = roomModel.findRackById(targetRackId);
+            task.setDestinationRack(target);
+        }
+        task.setOnSuccessCallback(() -> loadVisualRack(currentRack.getRackId()));
         task.start();
     }
 }

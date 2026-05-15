@@ -34,6 +34,16 @@ public class BatchOperationThread extends Thread {
         this.progressView = progressView;
     }
 
+    private Runnable onSuccessCallback;
+
+    public void setDestinationRack(ServerRack destinationRack) {
+        this.destinationRack = destinationRack;
+    }
+
+    public void setOnSuccessCallback(Runnable callback) {
+        this.onSuccessCallback = callback;
+    }
+
     @Override
     public void run() {
         SwingUtilities.invokeLater(() -> progressView.setVisible(true));
@@ -53,6 +63,9 @@ public class BatchOperationThread extends Thread {
         }
         SwingUtilities.invokeLater(() -> {
             progressView.dispose();
+            if (onSuccessCallback != null) {
+                onSuccessCallback.run();
+            }
         });
     }
     private void processAdd() {
@@ -61,7 +74,7 @@ public class BatchOperationThread extends Thread {
             Server s = serversList.get(i);
             boolean dbSuccess = serverDAO.create(s);
             if (dbSuccess && sourceRack != null) {
-                sourceRack.addEquipment(s, i);
+                sourceRack.addEquipment(s, s.getStartSlot());
             }
             updateProgress(i + 1, total, "Menambahkan server " + s.getIdAsset());
             simulateDelay(500);
@@ -73,6 +86,11 @@ public class BatchOperationThread extends Thread {
         for (int i = 0; i < total; i++) {
             Server s = serversList.get(i);
             serverDAO.update(s);
+
+            if (sourceRack != null) {
+                sourceRack.removeEquipment(s.getIdAsset());
+                sourceRack.addEquipment(s, s.getStartSlot());
+            }
             updateProgress(i + 1, total, "Memperbarui data server " + s.getIdAsset());
             simulateDelay(300);
         }
@@ -95,7 +113,16 @@ public class BatchOperationThread extends Thread {
         int total = serversList.size();
         for (int i = 0; i < total; i++) {
             Server s = serversList.get(i);
-            serverDAO.moveServerRack(s.getIdAsset(), targetRackId);
+            boolean dbSuccess = serverDAO.moveServerRack(s.getIdAsset(), targetRackId);
+            if (dbSuccess) {
+                if (sourceRack != null) {
+                    sourceRack.removeEquipment(s.getIdAsset());
+                }
+                if (destinationRack != null) {
+                    s.setRackId(targetRackId);
+                    destinationRack.addEquipment(s, s.getStartSlot());
+                }
+            }
             updateProgress(i + 1, total, "Memindahkan server " + s.getIdAsset() + " ke rak " + targetRackId);
             simulateDelay(400);
         }

@@ -6,6 +6,7 @@ package controller;
 
 import dao.ServerDAO;
 import model.DataCenterRoom;
+import model.GridLocation;
 import model.ServerRack;
 import view.MainDashboardView;
 
@@ -32,28 +33,88 @@ public class MainController {
     }
 
     public void loadGridRacks() {
-        List<ServerRack> racks = dataCenterModel.getAllRacks();
-        mainView.renderGrid(racks);
-
         JPanel grid = mainView.getGridPanel();
+        grid.removeAll();
 
-        for (ServerRack rack : racks) {
-            JButton btnRack = new JButton();
-            btnRack.setLayout(new BorderLayout());
+        List<ServerRack> racks = dataCenterModel.getAllRacks();
+        int rackCount = 0;
+        for (int r = 0; r < 5; r++) {
+            for (int c = 0; c < 8; c++) {
+                if (r == 2 || c == 2 || c == 5) {
+                    grid.add(new JLabel(""));
+                } else {
+                    if (rackCount < racks.size()) {
+                        ServerRack rack = racks.get(rackCount);
+                        JButton btnRack = new JButton();
+                        btnRack.setLayout(new BorderLayout());
 
-            JLabel lblRackId = new JLabel(rack.getRackId(), SwingConstants.CENTER);
-            JLabel lblZone = new JLabel(rack.getLocation().getLocationString(), SwingConstants.CENTER);
+                        JLabel lblRackId = new JLabel(rack.getRackId(), SwingConstants.CENTER);
+                        JLabel lblZone = new JLabel(rack.getLocation().getLocationString(), SwingConstants.CENTER);
 
-            btnRack.add(lblRackId, BorderLayout.CENTER);
-            btnRack.add(lblZone, BorderLayout.SOUTH);
-            btnRack.setBackground(Color.decode("#c5cae9"));
+                        btnRack.add(lblRackId, BorderLayout.CENTER);
+                        btnRack.add(lblZone, BorderLayout.SOUTH);
+                        btnRack.setBackground(Color.decode("#c5cae9"));
 
-            btnRack.addActionListener(e -> onRackClicked(rack.getRackId()));
+                        btnRack.addActionListener(e -> onRackClicked(rack.getRackId()));
+                        grid.add(btnRack);
+                    } else {
+                        JButton btnEmpty = new JButton("+ Tambah Rak");
+                        btnEmpty.setBorder(BorderFactory.createDashedBorder(Color.GRAY, 2, 5, 2, false));
+                        btnEmpty.setBackground(Color.decode("#f5f5f5"));
+                        btnEmpty.setForeground(Color.GRAY);
 
-            grid.add(btnRack);
+                        int slotIndex = rackCount;
+                        btnEmpty.addActionListener(e -> onEmptySlotClicked(slotIndex));
+
+                        grid.add(btnEmpty);
+                    }
+                    rackCount++;
+                }
+            }
         }
         grid.revalidate();
         grid.repaint();
+    }
+
+    public void onEmptySlotClicked(int slotIndex) {
+        JTextField txtRackId = new JTextField();
+        JTextField txtMaxCapacity = new JTextField("42");
+        JTextField txtZone = new JTextField("ZONA A");
+
+        Object[] message = {
+                "Masukkan ID Rak (Misal: RACK-A1):", txtRackId,
+                "Kapasitas Slot (U):", txtMaxCapacity,
+                "Nama Zona Letak:", txtZone
+        };
+
+        int option = JOptionPane.showConfirmDialog(mainView, message, "Tambah Server Rack Baru", JOptionPane.OK_CANCEL_OPTION);
+
+        if (option == JOptionPane.OK_OPTION) {
+            try {
+                String id = txtRackId.getText();
+                int capacity = Integer.parseInt(txtMaxCapacity.getText());
+                String zone = txtZone.getText();
+                int x = slotIndex % 6;
+                int y = slotIndex / 6;
+
+                GridLocation loc = new GridLocation(x, y, zone);
+                ServerRack newRack = new ServerRack(id, capacity, loc);
+
+                dao.RackDAO rackDAO = new dao.RackDAO();
+                boolean isSaved = rackDAO.create(newRack);
+
+                if (isSaved) {
+                    dataCenterModel.addRack(newRack);
+                    loadGridRacks();
+                    JOptionPane.showMessageDialog(mainView, "Rak berhasil ditambahkan ke Database!");
+                } else {
+                    JOptionPane.showMessageDialog(mainView, "Gagal menyimpan ke Database (ID mungkin duplikat).");
+                }
+
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(mainView, "Error: Kapasitas harus berupa angka valid!");
+            }
+        }
     }
 
     public void onRackClicked(String rackId) {

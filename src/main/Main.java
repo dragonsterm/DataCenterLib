@@ -4,6 +4,15 @@
  */
 package main;
 
+import controller.MainController;
+import model.DataCenterRoom;
+import model.GridLocation;
+import model.ServerRack;
+import view.MainDashboardView;
+
+import javax.swing.SwingUtilities;
+
+
 /**
  *
  * @author mahar
@@ -15,6 +24,21 @@ public class Main {
      */
     public static void main(String[] args) {
         // TODO code application logic here
+        SwingUtilities.invokeLater(() -> {
+
+            DataCenterRoom mainRoom = new DataCenterRoom("Alpha Core Room");
+            dao.RackDAO rackDAO = new dao.RackDAO();
+            for (ServerRack rack : rackDAO.getAllRacks()) {
+                mainRoom.addRack(rack);
+            }
+
+            MainDashboardView dashboardView = new MainDashboardView();
+
+            MainController appController = new MainController(dashboardView, mainRoom);
+
+            appController.initController();
+
+        });
     }
     
 }

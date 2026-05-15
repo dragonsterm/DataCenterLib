@@ -36,7 +36,8 @@ public class ServerController {
             try {
                 double cpuInput = Double.parseDouble(serverView.getInputCpu());
                 double ramInput = Double.parseDouble(serverView.getInputRam());
-                updateManualUtilization(cpuInput, ramInput);
+                int storageInput = Integer.parseInt(serverView.getInputStorage());
+                updateManualUtilization(cpuInput, ramInput, storageInput);
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(serverView, "Input Must Be Numbers");
             }
@@ -59,7 +60,7 @@ public class ServerController {
             dialog.addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosing(WindowEvent e) {
-                    if (statThread != null) {
+                    if (statThread != null && statThread.isAlive()) {
                         statThread.stopMonitoring();
                     }
                 }
@@ -68,13 +69,14 @@ public class ServerController {
         }
     }
 
-    public void updateManualUtilization(double cpu, double ram) {
+    public void updateManualUtilization(double cpu, double ram, int storage) {
         if (currentServer != null) {
             String selectedStatus = serverView.getSelectedStatus();
 
             currentServer.setStatus(selectedStatus);
             currentServer.setCpuUtilization(cpu);
             currentServer.setRamUtilization(ram);
+            currentServer.setUsedStorageGB(storage);
 
             boolean isSuccess = serverDAO.update(currentServer);
 
@@ -88,7 +90,7 @@ public class ServerController {
     }
 
     public void startMonitoring() {
-        if (statThread != null & statThread.isAlive()) {
+        if (statThread != null && statThread.isAlive()) {
             statThread.stopMonitoring();
         }
 

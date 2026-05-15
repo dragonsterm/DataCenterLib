@@ -32,8 +32,8 @@ public class BatchProgressDialog extends JDialog {
         progressBar.setPreferredSize(new Dimension(360, 30));
 
         JPanel progressPanel = new JPanel();
-        progressBar.setBorder(BorderFactory.createEmptyBorder(5, 15, 20, 15));
-        progressBar.add(progressBar);
+        progressPanel.setBorder(BorderFactory.createEmptyBorder(5, 15, 20, 15));
+        progressPanel.add(progressBar);
 
         add(lblStatus, BorderLayout.NORTH);
         add(progressPanel, BorderLayout.CENTER);

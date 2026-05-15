@@ -10,21 +10,24 @@ package model;
  */
 public class Server extends ComputingDevice {
     private String osType;
+    private String cpuName;
     private double cpuUtilization;
     private double ramUtilization;
     private int totalStorageGB;
     private int usedStorageGB;
+    private int startSlot;
+    private String rackId;
 
-    public Server(String idAsset, String modelName, int sizeInU, String status, int cpuCores, int totalRamGB,
+    public Server(String idAsset, String modelName, int sizeInU, String status, String cpuName, int cpuCores, int totalRamGB,
                   String osType, int totalStorageGB, int usedStorageGB) {
         super(idAsset, modelName, sizeInU, status, cpuCores, totalRamGB);
+        this.cpuName = cpuName;
         this.osType = osType;
         this.totalStorageGB = totalStorageGB;
         this.usedStorageGB = usedStorageGB;
         this.cpuUtilization = 0.0;
         this.ramUtilization = 0.0;
 
-        // Memicu validasi status walau saat pertama kali dibentuk
         this.setStatus(status);
     }
 
@@ -36,19 +39,29 @@ public class Server extends ComputingDevice {
 
     @Override
     public double calculateLoad() {
-        // Contoh kalkulasi beban sederhana (rata-rata dari persentase CPU dan RAM)
         return (cpuUtilization + ramUtilization) / 2.0;
     }
 
     @Override
     public void setStatus(String status) {
-        super.setStatus(status); // Set status default di parent class
+        super.setStatus(status);
 
-        // Memaksa utilitas 0 jika dialihkan kesalah satu dari status ini
         if ("Offline".equalsIgnoreCase(status) || "Maintenance".equalsIgnoreCase(status)) {
             this.cpuUtilization = 0.0;
             this.ramUtilization = 0.0;
         }
+    }
+
+    public String getCpuName() {
+        return cpuName;
+    }
+
+    public void setCpuName(String cpuName) {
+        this.cpuName = cpuName;
+    }
+
+    public void setUsedStorageGB(int usedStorageGB) {
+        this.usedStorageGB = usedStorageGB;
     }
 
     public double getCpuUtilization() {
@@ -77,6 +90,21 @@ public class Server extends ComputingDevice {
 
     public int getUsedStorageGB() {
         return usedStorageGB;
+    }
+
+    public int getStartSlot() {
+        return startSlot;
+    }
+
+    public void setStartSlot(int startSlot) {
+        this.startSlot = startSlot;
+    }
+
+    public void setRackId(String rackId){
+        this.rackId = rackId;
+    }
+    public String getRackId(){
+        return rackId;
     }
 
 

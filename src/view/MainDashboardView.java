@@ -29,7 +29,7 @@ public class MainDashboardView extends JFrame {
         add(lblTitle, BorderLayout.NORTH);
 
         gridPanel = new JPanel();
-        gridPanel.setLayout(new GridLayout(0, 3, 15, 15));
+        gridPanel.setLayout(new GridLayout(5, 8, 10, 10));
         gridPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         JScrollPane scrollPane = new JScrollPane(gridPanel);

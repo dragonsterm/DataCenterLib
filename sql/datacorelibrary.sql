@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 12, 2026 at 05:29 PM
+-- Generation Time: May 15, 2026 at 12:59 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -32,6 +32,7 @@ CREATE TABLE `server` (
   `model_name` varchar(100) NOT NULL,
   `size_in_u` int(11) NOT NULL,
   `status` varchar(50) NOT NULL,
+  `cpu_name` varchar(100) DEFAULT 'Intel Xeon',
   `cpu_cores` int(11) NOT NULL,
   `total_ram_gb` int(11) NOT NULL,
   `os_type` varchar(50) NOT NULL,
@@ -42,6 +43,16 @@ CREATE TABLE `server` (
   `rack_id` varchar(50) DEFAULT NULL,
   `start_slot` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `server`
+--
+
+INSERT INTO `server` (`id_asset`, `model_name`, `size_in_u`, `status`, `cpu_name`, `cpu_cores`, `total_ram_gb`, `os_type`, `total_storage_gb`, `used_storage_gb`, `cpu_utilization`, `ram_utilization`, `rack_id`, `start_slot`) VALUES
+('SRV-1', 'Dell PowerEdge', 1, 'Offline', 'Intel Xeon', 64, 128, 'Linux', 1024, 0, 0, 0, 'test1', 0),
+('SRV-2', 'Dell PowerEdge', 1, 'Online', 'Intel Xeon', 64, 128, 'Linux', 1024, 0, 50, 50, 'test1', 1),
+('SRV-3', 'Dell PowerEdge', 1, 'Offline', 'Intel Xeon', 64, 128, 'Linux', 1024, 0, 0, 0, 'test2', 2),
+('SRV-4', 'Dell PowerEdge', 1, 'Offline', 'Intel Xeon', 64, 128, 'Linux', 1024, 0, 0, 0, 'test2', 3);
 
 -- --------------------------------------------------------
 
@@ -56,6 +67,14 @@ CREATE TABLE `server_rack` (
   `x_coord` int(11) NOT NULL,
   `y_coord` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `server_rack`
+--
+
+INSERT INTO `server_rack` (`rack_id`, `max_capacity_u`, `zone_name`, `x_coord`, `y_coord`) VALUES
+('test1', 42, 'ZONA A', 0, 0),
+('test2', 42, 'ZONA A', 1, 0);
 
 --
 -- Indexes for dumped tables
