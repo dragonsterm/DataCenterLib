@@ -37,38 +37,48 @@ public class MainController {
         grid.removeAll();
 
         List<ServerRack> racks = dataCenterModel.getAllRacks();
-        int rackCount = 0;
+
         for (int r = 0; r < 5; r++) {
             for (int c = 0; c < 8; c++) {
                 if (r == 2 || c == 2 || c == 5) {
                     grid.add(new JLabel(""));
                 } else {
-                    if (rackCount < racks.size()) {
-                        ServerRack rack = racks.get(rackCount);
+                    ServerRack foundRack = null;
+                    for (ServerRack rack : racks) {
+                        if (rack.getLocation().getxCoordinate() == c && rack.getLocation().getyCoordinate() == r) {
+                            foundRack = rack;
+                            break;
+                        }
+                    }
+
+                    if (foundRack != null) {
                         JButton btnRack = new JButton();
                         btnRack.setLayout(new BorderLayout());
 
-                        JLabel lblRackId = new JLabel(rack.getRackId(), SwingConstants.CENTER);
-                        JLabel lblZone = new JLabel(rack.getLocation().getLocationString(), SwingConstants.CENTER);
+                        JLabel lblRackId = new JLabel(foundRack.getRackId(), SwingConstants.CENTER);
+                        JLabel lblZone = new JLabel(foundRack.getLocation().getLocationString(), SwingConstants.CENTER);
 
                         btnRack.add(lblRackId, BorderLayout.CENTER);
                         btnRack.add(lblZone, BorderLayout.SOUTH);
                         btnRack.setBackground(Color.decode("#c5cae9"));
 
-                        btnRack.addActionListener(e -> onRackClicked(rack.getRackId()));
-                        grid.add(btnRack);
+                        final String finalRackId = foundRack.getRackId();
+
+                        btnRack.addActionListener(e -> onRackClicked(finalRackId));
+                        grid.add(btnRack);;
                     } else {
                         JButton btnEmpty = new JButton("Insert Rack");
                         btnEmpty.setBorder(BorderFactory.createDashedBorder(Color.GRAY, 2, 5, 2, false));
                         btnEmpty.setBackground(Color.decode("#f5f5f5"));
                         btnEmpty.setForeground(Color.GRAY);
 
-                        int slotIndex = rackCount;
-                        btnEmpty.addActionListener(e -> onEmptySlotClicked(slotIndex));
+                        final int xCoord = c;
+                        final int yCoord = r;
+
+                        btnEmpty.addActionListener(e -> onEmptySlotClicked(xCoord, yCoord));
 
                         grid.add(btnEmpty);
                     }
-                    rackCount++;
                 }
             }
         }
@@ -76,9 +86,9 @@ public class MainController {
         grid.repaint();
     }
 
-    public void onEmptySlotClicked(int slotIndex) {
+    public void onEmptySlotClicked(int x, int y) {
         JTextField txtRackId = new JTextField();
-        JTextField txtMaxCapacity = new JTextField("12");
+        JTextField txtMaxCapacity = new JTextField("42");
         JTextField txtZone = new JTextField("ZONA A");
 
         Object[] message = {
@@ -94,8 +104,6 @@ public class MainController {
                 String id = txtRackId.getText();
                 int capacity = Integer.parseInt(txtMaxCapacity.getText());
                 String zone = txtZone.getText();
-                int x = slotIndex % 6;
-                int y = slotIndex / 6;
 
                 GridLocation loc = new GridLocation(x, y, zone);
                 ServerRack newRack = new ServerRack(id, capacity, loc);
