@@ -16,6 +16,9 @@ import java.util.List;
  */
 public class MainDashboardView extends JFrame {
     private JPanel gridPanel;
+    private JLabel lblTitle;
+    private JMenuItem itemChangeLocation;
+    private JMenuItem itemAddRoom;
 
     public MainDashboardView() {
         setTitle("Data Center Dashboard - Room Map");
@@ -24,8 +27,23 @@ public class MainDashboardView extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        JLabel lblTitle = new JLabel("Data Center Dashboard - Room Map");
+        JMenuBar menuBar = new JMenuBar();
+
+        JMenu menuHome = new JMenu("Home");
+        itemChangeLocation = new JMenuItem("Change Location");
+        menuHome.add(itemChangeLocation);
+
+        JMenu menuTools = new JMenu("Tools");
+        itemAddRoom = new JMenuItem("Add Room");
+        menuTools.add(itemAddRoom);
+
+        menuBar.add(menuHome);
+        menuBar.add(menuTools);
+        setJMenuBar(menuBar);
+
+        lblTitle = new JLabel("<html>Data Center Dashboard<br>Room: Alpha Core Room</html>");
         lblTitle.setFont(new Font("Arial", Font.BOLD, 18));
+        lblTitle.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         add(lblTitle, BorderLayout.NORTH);
 
         gridPanel = new JPanel();
@@ -36,11 +54,20 @@ public class MainDashboardView extends JFrame {
         add(scrollPane, BorderLayout.CENTER);
     }
 
-    public void renderGrid(List<ServerRack> racks) {
-        gridPanel.removeAll();
+    public void setDashboardTitle(String roomName) {
+        lblTitle.setText("<html>Data Center Dashboard<br>Room: " + roomName + "</html>");
+        setTitle("Dashboard - " + roomName);
     }
 
     public JPanel getGridPanel() {
         return gridPanel;
+    }
+
+    public JMenuItem getItemChangeLocation() {
+        return itemChangeLocation;
+    }
+
+    public JMenuItem getItemAddRoom() {
+        return itemAddRoom;
     }
 }

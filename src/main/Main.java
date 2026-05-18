@@ -28,7 +28,8 @@ public class Main {
 
             DataCenterRoom mainRoom = new DataCenterRoom("Alpha Core Room");
             dao.RackDAO rackDAO = new dao.RackDAO();
-            for (ServerRack rack : rackDAO.getAllRacks()) {
+
+            for (ServerRack rack : rackDAO.getRacksByRoom("Alpha Core Room")) {
                 mainRoom.addRack(rack);
             }
 

@@ -29,6 +29,54 @@ public class MainController {
 
     public void initController() {
         loadGridRacks();
+
+        // --- EVENT LISTENER UNTUK MENU BAR ---
+
+        // 1. Menu Tools -> Add Room
+        mainView.getItemAddRoom().addActionListener(e -> {
+            String newRoomName = JOptionPane.showInputDialog(mainView, "Masukkan Nama Room Baru:");
+            if (newRoomName != null && !newRoomName.trim().isEmpty()) {
+                dao.RoomDAO roomDAO = new dao.RoomDAO();
+                if (roomDAO.createRoom(newRoomName)) {
+                    JOptionPane.showMessageDialog(mainView, "Room '" + newRoomName + "' berhasil ditambahkan ke Database!");
+                } else {
+                    JOptionPane.showMessageDialog(mainView, "Gagal menambah room, pastikan nama room unik.");
+                }
+            }
+        });
+
+        // 2. Menu Home -> Change Location
+        mainView.getItemChangeLocation().addActionListener(e -> {
+            dao.RoomDAO roomDAO = new dao.RoomDAO();
+            java.util.List<String> roomsList = roomDAO.getAllRoomNames();
+            String[] availableRooms = roomsList.toArray(new String[0]); // Konversi ke array
+
+            String selectedRoom = (String) JOptionPane.showInputDialog(
+                    mainView,
+                    "Pilih Lokasi Room Data Center:",
+                    "Change Location",
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    availableRooms,
+                    availableRooms.length > 0 ? availableRooms[0] : null
+            );
+
+            if (selectedRoom != null) {
+                // Update model room
+                dataCenterModel = new model.DataCenterRoom(selectedRoom);
+
+                // Ambil ulang data rak KHUSUS untuk room yang dipilih
+                dao.RackDAO rackDAO = new dao.RackDAO();
+                for (model.ServerRack rack : rackDAO.getRacksByRoom(selectedRoom)) {
+                    dataCenterModel.addRack(rack);
+                }
+
+                mainView.setDashboardTitle(selectedRoom);
+                loadGridRacks();
+                JOptionPane.showMessageDialog(mainView, "Berhasil memuat lokasi: " + selectedRoom);
+            }
+        });
+
         mainView.setVisible(true);
     }
 
@@ -109,7 +157,7 @@ public class MainController {
                 ServerRack newRack = new ServerRack(id, capacity, loc);
 
                 dao.RackDAO rackDAO = new dao.RackDAO();
-                boolean isSaved = rackDAO.create(newRack);
+                boolean isSaved = rackDAO.create(newRack, dataCenterModel.getRoomName());
 
                 if (isSaved) {
                     dataCenterModel.addRack(newRack);
