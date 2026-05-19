@@ -24,7 +24,7 @@ public class RackDAO {
             stmt.setString(3, rack.getLocation().getZoneName());
             stmt.setInt(4, rack.getLocation().getxCoordinate());
             stmt.setInt(5, rack.getLocation().getyCoordinate());
-            stmt.setInt(6, roomId); // Set Foreign Key id_room
+            stmt.setInt(6, roomId);
 
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -64,5 +64,18 @@ public class RackDAO {
             e.printStackTrace();
         }
         return racks;
+    }
+
+    public boolean updateLocation(String rackId, int newX, int newY) {
+        String sql = "UPDATE server_rack SET x_coord = ?, y_coord = ? WHERE rack_id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, newX);
+            stmt.setInt(2, newY);
+            stmt.setString(3, rackId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

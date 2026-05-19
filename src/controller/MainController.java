@@ -4,14 +4,14 @@
  */
 package controller;
 
-import dao.ServerDAO;
+import dao.RoomDAO;
+import dao.RackDAO;
 import model.DataCenterRoom;
-import model.GridLocation;
-import model.ServerRack;
 import view.MainDashboardView;
+import view.Viewport;
 
 import javax.swing.*;
-import java.awt.*;
+import java.awt.Color;
 import java.util.List;
 
 /**
@@ -28,32 +28,64 @@ public class MainController {
     }
 
     public void initController() {
-        loadGridRacks();
+        mainView.updateViewportRoom(dataCenterModel);
 
-        // --- EVENT LISTENER UNTUK MENU BAR ---
+        mainView.getBtnSelect().addActionListener(e -> {
+            mainView.getViewport().setMode(Viewport.Mode.SELECT);
+            highlightActiveButton(mainView.getBtnSelect());
+        });
 
-        // 1. Menu Tools -> Add Room
+        mainView.getBtnBuildRack().addActionListener(e -> {
+            mainView.getViewport().setMode(Viewport.Mode.BUILD_RACK);
+            highlightActiveButton(mainView.getBtnBuildRack());
+        });
+
+        mainView.getBtnBuildPath().addActionListener(e -> {
+            mainView.getViewport().setMode(Viewport.Mode.BUILD_PATH);
+            highlightActiveButton(mainView.getBtnBuildPath());
+        });
+
+        highlightActiveButton(mainView.getBtnSelect());
+
         mainView.getItemAddRoom().addActionListener(e -> {
-            String newRoomName = JOptionPane.showInputDialog(mainView, "Masukkan Nama Room Baru:");
-            if (newRoomName != null && !newRoomName.trim().isEmpty()) {
-                dao.RoomDAO roomDAO = new dao.RoomDAO();
-                if (roomDAO.createRoom(newRoomName)) {
-                    JOptionPane.showMessageDialog(mainView, "Room '" + newRoomName + "' berhasil ditambahkan ke Database!");
-                } else {
-                    JOptionPane.showMessageDialog(mainView, "Gagal menambah room, pastikan nama room unik.");
+            JTextField txtRoomName = new JTextField();
+            JComboBox<String> cbSize = new JComboBox<>(new String[]{
+                    "Small (32 x 32)",
+                    "Medium (64 x 64)",
+                    "Large (128 x 128)"
+            });
+
+            Object[] message = {
+                    "Masukkan Nama Room Baru:", txtRoomName,
+                    "Tentukan Ukuran Area:", cbSize
+            };
+
+            int option = JOptionPane.showConfirmDialog(mainView, message, "Create New Room", JOptionPane.OK_CANCEL_OPTION);
+            if (option == JOptionPane.OK_OPTION) {
+                String newRoomName = txtRoomName.getText().trim();
+                if (!newRoomName.isEmpty()) {
+                    int size = 64;
+                    if (cbSize.getSelectedIndex() == 0) size = 32;
+                    else if (cbSize.getSelectedIndex() == 2) size = 128;
+
+                    RoomDAO roomDAO = new RoomDAO();
+                    if (roomDAO.createRoom(newRoomName, size, size)) {
+                        JOptionPane.showMessageDialog(mainView, "Room '" + newRoomName + "' berhasil dibuat dengan ukuran " + size + "x" + size);
+                    } else {
+                        JOptionPane.showMessageDialog(mainView, "Gagal membuat room. Nama mungkin sudah ada.");
+                    }
                 }
             }
         });
 
-        // 2. Menu Home -> Change Location
         mainView.getItemChangeLocation().addActionListener(e -> {
-            dao.RoomDAO roomDAO = new dao.RoomDAO();
-            java.util.List<String> roomsList = roomDAO.getAllRoomNames();
-            String[] availableRooms = roomsList.toArray(new String[0]); // Konversi ke array
+            RoomDAO roomDAO = new RoomDAO();
+            List<String> roomsList = roomDAO.getAllRoomNames();
+            String[] availableRooms = roomsList.toArray(new String[0]);
 
             String selectedRoom = (String) JOptionPane.showInputDialog(
                     mainView,
-                    "Pilih Lokasi Room Data Center:",
+                    "Pilih Lokasi Ruangan:",
                     "Change Location",
                     JOptionPane.QUESTION_MESSAGE,
                     null,
@@ -62,17 +94,20 @@ public class MainController {
             );
 
             if (selectedRoom != null) {
-                // Update model room
-                dataCenterModel = new model.DataCenterRoom(selectedRoom);
+                dataCenterModel = roomDAO.getRoomByName(selectedRoom);
 
-                // Ambil ulang data rak KHUSUS untuk room yang dipilih
-                dao.RackDAO rackDAO = new dao.RackDAO();
+                RackDAO rackDAO = new RackDAO();
                 for (model.ServerRack rack : rackDAO.getRacksByRoom(selectedRoom)) {
                     dataCenterModel.addRack(rack);
                 }
 
+                dao.PathDAO pathDAO = new dao.PathDAO();
+                for (model.RoomPath p : pathDAO.getPathsByRoom(selectedRoom)) {
+                    dataCenterModel.addPath(p);
+                }
+
                 mainView.setDashboardTitle(selectedRoom);
-                loadGridRacks();
+                mainView.updateViewportRoom(dataCenterModel);
                 JOptionPane.showMessageDialog(mainView, "Berhasil memuat lokasi: " + selectedRoom);
             }
         });
@@ -80,106 +115,16 @@ public class MainController {
         mainView.setVisible(true);
     }
 
-    public void loadGridRacks() {
-        JPanel grid = mainView.getGridPanel();
-        grid.removeAll();
+    private void highlightActiveButton(JButton activeBtn) {
+        mainView.getBtnSelect().setBackground(Color.decode("#4F545C"));
+        mainView.getBtnBuildRack().setBackground(Color.decode("#4F545C"));
+        mainView.getBtnBuildPath().setBackground(Color.decode("#4F545C"));
 
-        List<ServerRack> racks = dataCenterModel.getAllRacks();
+        activeBtn.setBackground(Color.decode("#F3C623"));
+        activeBtn.setForeground(Color.BLACK);
 
-        for (int r = 0; r < 5; r++) {
-            for (int c = 0; c < 8; c++) {
-                if (r == 2 || c == 2 || c == 5) {
-                    grid.add(new JLabel(""));
-                } else {
-                    ServerRack foundRack = null;
-                    for (ServerRack rack : racks) {
-                        if (rack.getLocation().getxCoordinate() == c && rack.getLocation().getyCoordinate() == r) {
-                            foundRack = rack;
-                            break;
-                        }
-                    }
-
-                    if (foundRack != null) {
-                        JButton btnRack = new JButton();
-                        btnRack.setLayout(new BorderLayout());
-
-                        JLabel lblRackId = new JLabel(foundRack.getRackId(), SwingConstants.CENTER);
-                        JLabel lblZone = new JLabel(foundRack.getLocation().getLocationString(), SwingConstants.CENTER);
-
-                        btnRack.add(lblRackId, BorderLayout.CENTER);
-                        btnRack.add(lblZone, BorderLayout.SOUTH);
-                        btnRack.setBackground(Color.decode("#c5cae9"));
-
-                        final String finalRackId = foundRack.getRackId();
-
-                        btnRack.addActionListener(e -> onRackClicked(finalRackId));
-                        grid.add(btnRack);;
-                    } else {
-                        JButton btnEmpty = new JButton("Insert Rack");
-                        btnEmpty.setBorder(BorderFactory.createDashedBorder(Color.GRAY, 2, 5, 2, false));
-                        btnEmpty.setBackground(Color.decode("#f5f5f5"));
-                        btnEmpty.setForeground(Color.GRAY);
-
-                        final int xCoord = c;
-                        final int yCoord = r;
-
-                        btnEmpty.addActionListener(e -> onEmptySlotClicked(xCoord, yCoord));
-
-                        grid.add(btnEmpty);
-                    }
-                }
-            }
-        }
-        grid.revalidate();
-        grid.repaint();
-    }
-
-    public void onEmptySlotClicked(int x, int y) {
-        JTextField txtRackId = new JTextField();
-        JTextField txtMaxCapacity = new JTextField("42");
-        JTextField txtZone = new JTextField("ZONA A");
-
-        Object[] message = {
-                "Masukkan ID Rak (Misal: RACK-A1):", txtRackId,
-                "Kapasitas Slot (U):", txtMaxCapacity,
-                "Nama Zona Letak:", txtZone
-        };
-
-        int option = JOptionPane.showConfirmDialog(mainView, message, "Tambah Server Rack Baru", JOptionPane.OK_CANCEL_OPTION);
-
-        if (option == JOptionPane.OK_OPTION) {
-            try {
-                String id = txtRackId.getText();
-                int capacity = Integer.parseInt(txtMaxCapacity.getText());
-                String zone = txtZone.getText();
-
-                GridLocation loc = new GridLocation(x, y, zone);
-                ServerRack newRack = new ServerRack(id, capacity, loc);
-
-                dao.RackDAO rackDAO = new dao.RackDAO();
-                boolean isSaved = rackDAO.create(newRack, dataCenterModel.getRoomName());
-
-                if (isSaved) {
-                    dataCenterModel.addRack(newRack);
-                    loadGridRacks();
-                    JOptionPane.showMessageDialog(mainView, "Rak berhasil ditambahkan ke Database!");
-                } else {
-                    JOptionPane.showMessageDialog(mainView, "Gagal menyimpan ke Database (ID mungkin duplikat).");
-                }
-
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(mainView, "Error: Kapasitas harus berupa angka valid!");
-            }
-        }
-    }
-
-    public void onRackClicked(String rackId) {
-        ServerRack clickedRack = dataCenterModel.findRackById(rackId);
-
-        if (clickedRack != null) {
-            ServerDAO serverDAO = new ServerDAO();
-            RackController rackController = new RackController(dataCenterModel, clickedRack, serverDAO);
-            rackController.loadVisualRack(rackId);
-        }
+        if(activeBtn != mainView.getBtnSelect()) mainView.getBtnSelect().setForeground(Color.WHITE);
+        if(activeBtn != mainView.getBtnBuildRack()) mainView.getBtnBuildRack().setForeground(Color.WHITE);
+        if(activeBtn != mainView.getBtnBuildPath()) mainView.getBtnBuildPath().setForeground(Color.WHITE);
     }
 }

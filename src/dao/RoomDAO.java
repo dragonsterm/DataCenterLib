@@ -1,5 +1,10 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package dao;
 
+import model.DataCenterRoom;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -7,6 +12,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ *
+ * @author mahar
+ */
 public class RoomDAO {
     private Connection connection;
 
@@ -28,10 +37,12 @@ public class RoomDAO {
         return rooms;
     }
 
-    public boolean createRoom(String roomName) {
-        String sql = "INSERT INTO data_center_room (room_name) VALUES (?)";
+    public boolean createRoom(String roomName, int widthGrid, int heightGrid) {
+        String sql = "INSERT INTO data_center_room (room_name, width_grid, height_grid) VALUES (?, ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, roomName);
+            stmt.setInt(2, widthGrid);
+            stmt.setInt(3, heightGrid);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -51,5 +62,21 @@ public class RoomDAO {
             e.printStackTrace();
         }
         return -1;
+    }
+
+    public DataCenterRoom getRoomByName(String roomName) {
+        String sql = "SELECT * FROM data_center_room WHERE room_name = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, roomName);
+            ResultSet rs = stmt.executeQuery();
+            if(rs.next()) {
+                DataCenterRoom room = new DataCenterRoom(roomName);
+                room.setDimensions(rs.getInt("width_grid"), rs.getInt("height_grid"));
+                return room;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return new DataCenterRoom(roomName);
     }
 }

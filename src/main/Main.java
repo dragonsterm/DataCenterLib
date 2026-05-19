@@ -6,7 +6,7 @@ package main;
 
 import controller.MainController;
 import model.DataCenterRoom;
-import model.GridLocation;
+import dao.RoomDAO;
 import model.ServerRack;
 import view.MainDashboardView;
 
@@ -26,19 +26,23 @@ public class Main {
         // TODO code application logic here
         SwingUtilities.invokeLater(() -> {
 
-            DataCenterRoom mainRoom = new DataCenterRoom("Alpha Core Room");
-            dao.RackDAO rackDAO = new dao.RackDAO();
+            RoomDAO roomDAO = new RoomDAO();
+            DataCenterRoom mainRoom = roomDAO.getRoomByName("Alpha Core Room");
 
+            dao.RackDAO rackDAO = new dao.RackDAO();
             for (ServerRack rack : rackDAO.getRacksByRoom("Alpha Core Room")) {
                 mainRoom.addRack(rack);
             }
 
-            MainDashboardView dashboardView = new MainDashboardView();
+            dao.PathDAO pathDAO = new dao.PathDAO();
+            for (model.RoomPath path : pathDAO.getPathsByRoom("Alpha Core Room")) {
+                mainRoom.addPath(path);
+            }
 
+            MainDashboardView dashboardView = new MainDashboardView();
             MainController appController = new MainController(dashboardView, mainRoom);
 
             appController.initController();
-
         });
     }
     

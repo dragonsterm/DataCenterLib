@@ -55,10 +55,10 @@ public class RackDetailView extends JDialog {
         lblInstruction = new JLabel("Please click one or more slots/servers for actions.");
         lblInstruction.setFont(new Font("Arial", Font.ITALIC, 13));
 
-        btnBatchAdd = new JButton("Batch Add");
-        btnBatchUpdate = new JButton("Batch Update");
-        btnBatchMove = new JButton("Batch Move");
-        btnBatchDelete = new JButton("Batch Delete");
+        btnBatchAdd = new JButton("Add");
+        btnBatchUpdate = new JButton("Update");
+        btnBatchMove = new JButton("Move");
+        btnBatchDelete = new JButton("Delete");
         btnShowDetail = new JButton("Server Detail");
 
         actionPanel.add(lblInstruction);

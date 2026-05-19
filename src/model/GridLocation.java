@@ -19,6 +19,11 @@ public class GridLocation {
         this.zoneName = zoneName;
     }
 
+    public void setCoordinates(int x, int y) {
+        this.xCoordinate = x;
+        this.yCoordinate = y;
+    }
+
     public String getLocationString() {
         return "Zone " + zoneName + " [" + xCoordinate + "," + yCoordinate + "]";
     }
