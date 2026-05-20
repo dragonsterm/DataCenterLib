@@ -28,7 +28,7 @@ public class BaseView extends JFrame {
     private JButton btnDemolish;
 
     public BaseView() {
-        setTitle("DataCoreLib");
+        setTitle("DataCore");
         setSize(1280, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
