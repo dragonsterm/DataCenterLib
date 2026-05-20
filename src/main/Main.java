@@ -11,6 +11,7 @@ import model.ServerRack;
 import view.BaseView;
 
 import javax.swing.SwingUtilities;
+import java.util.List;
 
 
 /**
@@ -25,17 +26,28 @@ public class Main {
     public static void main(String[] args) {
         // TODO code application logic here
         SwingUtilities.invokeLater(() -> {
-
             RoomDAO roomDAO = new RoomDAO();
-            DataCenterRoom mainRoom = roomDAO.getRoomByName("Alpha Core Room");
+            List<String> allRooms = roomDAO.getAllRoomNames();
+            String roomToLoad = "Alpha Core Room";
+
+            if (allRooms.isEmpty()) {
+
+                boolean isCreated = roomDAO.createRoom("Default Room", 64, 64);
+                if (isCreated) {
+                    roomToLoad = "Default Room";
+                }
+            } else if (!allRooms.contains(roomToLoad)) {
+                roomToLoad = allRooms.get(0);
+            }
+            DataCenterRoom mainRoom = roomDAO.getRoomByName(roomToLoad);
 
             dao.RackDAO rackDAO = new dao.RackDAO();
-            for (ServerRack rack : rackDAO.getRacksByRoom("Alpha Core Room")) {
+            for (ServerRack rack : rackDAO.getRacksByRoom(roomToLoad)) {
                 mainRoom.addRack(rack);
             }
 
             dao.PathDAO pathDAO = new dao.PathDAO();
-            for (model.RoomPath path : pathDAO.getPathsByRoom("Alpha Core Room")) {
+            for (model.RoomPath path : pathDAO.getPathsByRoom(roomToLoad)) {
                 mainRoom.addPath(path);
             }
 
