@@ -16,6 +16,8 @@ import model.ServerRack;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Arc2D;
+import java.awt.geom.Ellipse2D;
 
 /**
  *
@@ -35,6 +37,7 @@ public class Viewport extends JPanel {
     private Timer cameraTimer;
     public enum Mode { SELECT, BUILD_RACK, BUILD_PATH }
     private Mode currentMode = Mode.SELECT;
+
     private Timer interactionTimer;
     private int holdProgress = 0;
     private boolean isHoldingRack = false;
@@ -69,6 +72,7 @@ public class Viewport extends JPanel {
                 }
             }
         });
+        interactionTimer.setInitialDelay(250);
     }
 
     public void setMode(Mode mode) {
@@ -91,46 +95,14 @@ public class Viewport extends JPanel {
         im.put(KeyStroke.getKeyStroke("pressed D"), "right_pressed");
         im.put(KeyStroke.getKeyStroke("released D"), "right_released");
 
-        am.put("up_pressed", new AbstractAction() {
-            public void actionPerformed(ActionEvent e) {
-                upPressed = true;
-            }
-        });
-        am.put("up_released", new AbstractAction() {
-            public void actionPerformed(ActionEvent e) {
-                upPressed = false;
-            }
-        });
-        am.put("left_pressed", new AbstractAction() {
-            public void actionPerformed(ActionEvent e) {
-                leftPressed = true;
-            }
-        });
-        am.put("left_released", new AbstractAction() {
-            public void actionPerformed(ActionEvent e) {
-                leftPressed = false;
-            }
-        });
-        am.put("down_pressed", new AbstractAction() {
-            public void actionPerformed(ActionEvent e) {
-                downPressed = true;
-            }
-        });
-        am.put("down_released", new AbstractAction() {
-            public void actionPerformed(ActionEvent e) {
-                downPressed = false;
-            }
-        });
-        am.put("right_pressed", new AbstractAction() {
-            public void actionPerformed(ActionEvent e) {
-                rightPressed = true;
-            }
-        });
-        am.put("right_released", new AbstractAction() {
-            public void actionPerformed(ActionEvent e) {
-                rightPressed = false;
-            }
-        });
+        am.put("up_pressed", new AbstractAction() { public void actionPerformed(ActionEvent e) { upPressed = true; } });
+        am.put("up_released", new AbstractAction() { public void actionPerformed(ActionEvent e) { upPressed = false; } });
+        am.put("left_pressed", new AbstractAction() { public void actionPerformed(ActionEvent e) { leftPressed = true; } });
+        am.put("left_released", new AbstractAction() { public void actionPerformed(ActionEvent e) { leftPressed = false; } });
+        am.put("down_pressed", new AbstractAction() { public void actionPerformed(ActionEvent e) { downPressed = true; } });
+        am.put("down_released", new AbstractAction() { public void actionPerformed(ActionEvent e) { downPressed = false; } });
+        am.put("right_pressed", new AbstractAction() { public void actionPerformed(ActionEvent e) { rightPressed = true; } });
+        am.put("right_released", new AbstractAction() { public void actionPerformed(ActionEvent e) { rightPressed = false; } });
     }
 
     private void updateCamera() {
@@ -155,7 +127,7 @@ public class Viewport extends JPanel {
 
                 if (SwingUtilities.isLeftMouseButton(e)) {
                     holdProgress = 0;
-                    interactionTimer.start();
+                    interactionTimer.restart();
                 }
                 repaint();
             }
@@ -318,7 +290,10 @@ public class Viewport extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
+
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
 
         g2d.translate(-cameraX, -cameraY);
 
@@ -385,17 +360,18 @@ public class Viewport extends JPanel {
         g2d.translate(cameraX, cameraY);
 
         if (isClicking && currentMode == Mode.SELECT && !isHoldingRack && holdProgress > 0) {
-            int radius = 18;
-            int cx = holdMouseX - radius;
-            int cy = holdMouseY - radius;
+            double radius = 18.0;
+            double cx = holdMouseX - radius;
+            double cy = holdMouseY - radius;
 
             g2d.setColor(new Color(0, 0, 0, 120));
             g2d.setStroke(new BasicStroke(5, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-            g2d.drawOval(cx, cy, radius * 2, radius * 2);
+
+            g2d.draw(new Ellipse2D.Double(cx, cy, radius * 2, radius * 2));
 
             g2d.setColor(Color.WHITE);
-            int angle = (int) (360.0 * (holdProgress / 100.0));
-            g2d.drawArc(cx, cy, radius * 2, radius * 2, 90, -angle);
+            double angle = 360.0 * (holdProgress / 100.0);
+            g2d.draw(new Arc2D.Double(cx, cy, radius * 2, radius * 2, 90, -angle, Arc2D.OPEN));
         }
     }
 }
