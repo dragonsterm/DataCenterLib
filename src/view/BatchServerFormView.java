@@ -1,6 +1,6 @@
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
  */
 package view;
 
@@ -39,8 +39,8 @@ public class BatchServerFormView extends JDialog {
         setLayout(new BorderLayout());
 
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        btnAddRow = new JButton("+ Tambah Baris Server");
-        btnExecute = new JButton("Eksekusi Batch");
+        btnAddRow = new JButton("+ add More Server");
+        btnExecute = new JButton("Execute Batch");
 
         btnAddRow.setVisible(operationType.equalsIgnoreCase("ADD"));
 
@@ -102,6 +102,7 @@ public class BatchServerFormView extends JDialog {
                 int disk = Integer.parseInt(row.txtDisk.getText());
 
                 Server s = new Server(id, model, 1, "Offline", cpuName, cpuCores, ram, "Linux", disk, 0);
+                s.setStartSlot(row.originalSlot);
                 batchList.add(s);
             }
         } catch (NumberFormatException ex) {
@@ -123,10 +124,15 @@ public class BatchServerFormView extends JDialog {
         JPanel panel;
         JTextField txtId, txtModel, txtCpuName, txtCpu, txtRam, txtDisk;
         JButton btnDeleteRow;
+        int originalSlot = -1;
 
         public ServerRowUI(Server existingServer) {
             panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
             panel.setBorder(BorderFactory.createEtchedBorder());
+
+            if (existingServer != null) {
+                this.originalSlot = existingServer.getStartSlot();
+            }
 
             String initialId = existingServer != null ? existingServer.getIdAsset() : "SRV-" + (nextServerId++);
             String initialModel = existingServer != null ? existingServer.getModelName() : "Dell PowerEdge";

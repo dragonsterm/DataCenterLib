@@ -1,6 +1,6 @@
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
  */
 package controller;
 
@@ -14,8 +14,6 @@ import view.BatchProgressDialog;
 import view.RackDetailView;
 
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,7 +50,7 @@ public class RackController {
 
         rackView.getBtnBatchUpdate().addActionListener(e -> openBatchForm("UPDATE", rackView.getSelectedOccupiedSlots()));
         rackView.getBtnBatchMove().addActionListener(e -> openBatchForm("MOVE", rackView.getSelectedOccupiedSlots()));
-        
+
         rackView.getBtnBatchDelete().addActionListener(e -> {
             java.util.List<Integer> selectedSlots = rackView.getSelectedOccupiedSlots();
             if(!selectedSlots.isEmpty()) {
@@ -75,7 +73,7 @@ public class RackController {
                 }
             }
         });
-        
+
         rackView.getBtnShowDetail().addActionListener(e -> {
             java.util.List<Integer> selectedSlots = rackView.getSelectedOccupiedSlots();
             if (selectedSlots.size() == 1) {
@@ -135,14 +133,35 @@ public class RackController {
             String target = batchFormView.getSelectedTargetRack();
 
             if (dataInput != null && !dataInput.isEmpty()) {
+                List<Integer> availableSlots = new ArrayList<>();
+                String[] visual = currentRack.getVisualRepresentation();
+                for (int j = 0; j < visual.length; j++) {
+                    if (visual[j].endsWith("EMPTY")) {
+                        availableSlots.add(j);
+                    }
+                }
+
+                int selectedIndex = 0;
 
                 for (int i = 0; i < dataInput.size(); i++) {
                     Server s = dataInput.get(i);
                     s.setRackId(currentRack.getRackId());
 
-                    if (selectedSlots != null && i < selectedSlots.size()) {
-                        int slotIndexView = selectedSlots.get(i);
-                        s.setStartSlot(slotIndexView);
+                    if (operationType.equalsIgnoreCase("ADD")) {
+                        if (selectedIndex < selectedSlots.size()) {
+                            int slot = selectedSlots.get(selectedIndex);
+                            s.setStartSlot(slot);
+                            availableSlots.remove(Integer.valueOf(slot));
+                            selectedIndex++;
+                        } else {
+                            if (!availableSlots.isEmpty()) {
+                                int nextSlot = availableSlots.remove(0);
+                                s.setStartSlot(nextSlot);
+                            } else {
+                                JOptionPane.showMessageDialog(batchFormView, "Kapasitas rak tidak mencukupi untuk semua server!");
+                                return;
+                            }
+                        }
                     }
                 }
 
