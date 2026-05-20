@@ -272,12 +272,12 @@ public class Viewport extends JPanel {
             JTextField txtZone = new JTextField("ZONA A");
 
             Object[] message = {
-                    "Masukkan ID Rak (Misal: RACK-A1):", txtRackId,
-                    "Kapasitas Slot (U):", txtMaxCapacity,
-                    "Nama Zona Letak:", txtZone
+                    "Enter ID Rack (Misal: RACK-A1):", txtRackId,
+                    "Capacity Slot (U):", txtMaxCapacity,
+                    "Zone location:", txtZone
             };
 
-            int option = JOptionPane.showConfirmDialog(this, message, "Tambah Server Rack Baru (3x3)", JOptionPane.OK_CANCEL_OPTION);
+            int option = JOptionPane.showConfirmDialog(this, message, "Add new Server Rack (3x3)", JOptionPane.OK_CANCEL_OPTION);
 
             if (option == JOptionPane.OK_OPTION) {
                 try {

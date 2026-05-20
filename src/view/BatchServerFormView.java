@@ -22,14 +22,15 @@ public class BatchServerFormView extends JDialog {
     private JComboBox<String> cbTargetRack;
     private int maxAllowedCapacityU;
     private int currentFormU;
+    private String operationType;
 
     private List<ServerRowUI> rowUIs;
-
     private int nextServerId;
 
     public BatchServerFormView(int maxCapacityU, String operationType, List<String> availableRacks) {
         this.maxAllowedCapacityU = maxCapacityU;
         this.currentFormU = 0;
+        this.operationType = operationType;
         this.rowUIs = new ArrayList<>();
         this.nextServerId = new dao.ServerDAO().getNextServerId();
 
@@ -39,8 +40,8 @@ public class BatchServerFormView extends JDialog {
         setLayout(new BorderLayout());
 
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        btnAddRow = new JButton("+ add More Server");
-        btnExecute = new JButton("Execute Batch");
+        btnAddRow = new JButton("+ Add More Server");
+        btnExecute = new JButton("Execute");
 
         btnAddRow.setVisible(operationType.equalsIgnoreCase("ADD"));
 
@@ -58,12 +59,11 @@ public class BatchServerFormView extends JDialog {
         add(scrollPane, BorderLayout.CENTER);
 
         btnAddRow.addActionListener(e -> addFormRow(null));
-
     }
 
     public void addFormRow(Server existingServer) {
         if (!validateCapacity(1)) {
-            JOptionPane.showMessageDialog(this, "Kapasitas rak tidak mencukupi (Sisa " +
+            JOptionPane.showMessageDialog(this, "Rack Capacity is Not Enough (Left " +
                     (maxAllowedCapacityU - currentFormU) + "U)!");
             return;
         }
@@ -102,11 +102,12 @@ public class BatchServerFormView extends JDialog {
                 int disk = Integer.parseInt(row.txtDisk.getText());
 
                 Server s = new Server(id, model, 1, "Offline", cpuName, cpuCores, ram, "Linux", disk, 0);
+
                 s.setStartSlot(row.originalSlot);
                 batchList.add(s);
             }
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Pastikan nilai CPU Cores, RAM, & Disk berupa Angka!");
+            JOptionPane.showMessageDialog(this, "Make sure thats CPU Cores, RAM, & Disk are numbers!");
             return null;
         }
         return batchList;
@@ -124,6 +125,7 @@ public class BatchServerFormView extends JDialog {
         JPanel panel;
         JTextField txtId, txtModel, txtCpuName, txtCpu, txtRam, txtDisk;
         JButton btnDeleteRow;
+
         int originalSlot = -1;
 
         public ServerRowUI(Server existingServer) {
@@ -148,6 +150,14 @@ public class BatchServerFormView extends JDialog {
             txtCpu = new JTextField(initialCpu, 3);
             txtRam = new JTextField(initialRam, 3);
             txtDisk = new JTextField(initialDisk, 4);
+
+            if (operationType.equalsIgnoreCase("MOVE")) {
+                txtModel.setEditable(false);
+                txtCpuName.setEditable(false);
+                txtCpu.setEditable(false);
+                txtRam.setEditable(false);
+                txtDisk.setEditable(false);
+            }
 
             btnDeleteRow = new JButton("X");
 
