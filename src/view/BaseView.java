@@ -1,6 +1,6 @@
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
  */
 package view;
 
@@ -12,45 +12,57 @@ import java.awt.*;
  *
  * @author mahar
  */
-public class MainDashboardView extends JFrame {
-    private JLabel lblTitle;
+public class BaseView extends JFrame {
     private JMenuItem itemChangeLocation;
     private JMenuItem itemAddRoom;
-
+    private JMenuItem itemNavDashboard;
+    private JMenuItem itemNavMap;
+    private JPanel cardsContainer;
+    private CardLayout cardLayout;
+    private DashboardView dashboardView;
     private Viewport viewport;
+    private JPanel bottomToolbar;
     private JButton btnSelect;
     private JButton btnBuildRack;
     private JButton btnBuildPath;
 
-    public MainDashboardView() {
-        setTitle("Data Center Dashboard - Factory Mode");
-        setSize(1024, 768);
+    public BaseView() {
+        setTitle("DataCoreLib");
+        setSize(1280, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
         JMenuBar menuBar = new JMenuBar();
-        JMenu menuHome = new JMenu("Home");
+
+        JMenu menuHome = new JMenu("System");
         itemChangeLocation = new JMenuItem("Change Location");
         menuHome.add(itemChangeLocation);
 
-        JMenu menuTools = new JMenu("Tools");
-        itemAddRoom = new JMenuItem("Add Room");
+        JMenu menuNav = new JMenu("Menu");
+        itemNavDashboard = new JMenuItem("Dashboard");
+        itemNavMap = new JMenuItem("Room Map");
+        menuNav.add(itemNavDashboard);
+        menuNav.add(itemNavMap);
+
+        JMenu menuTools = new JMenu("Settings");
+        itemAddRoom = new JMenuItem("Add Data Center Room");
         menuTools.add(itemAddRoom);
 
+        menuBar.add(menuNav);
         menuBar.add(menuHome);
         menuBar.add(menuTools);
         setJMenuBar(menuBar);
 
-        lblTitle = new JLabel("<html>Data Center Dashboard<br>Room: Alpha Core Room</html>");
-        lblTitle.setFont(new Font("Arial", Font.BOLD, 18));
-        lblTitle.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        add(lblTitle, BorderLayout.NORTH);
+        cardLayout = new CardLayout();
+        cardsContainer = new JPanel(cardLayout);
 
-        viewport = new Viewport(new DataCenterRoom("Temp"));
-        add(viewport, BorderLayout.CENTER);
+        DataCenterRoom tempRoom = new DataCenterRoom("Temp");
+        dashboardView = new DashboardView(tempRoom);
 
-        JPanel bottomToolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
+        JPanel mapCard = new JPanel(new BorderLayout());
+        viewport = new Viewport(tempRoom);
+        bottomToolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
         bottomToolbar.setBackground(Color.decode("#2B2D31"));
         bottomToolbar.setBorder(BorderFactory.createMatteBorder(3, 0, 0, 0, Color.decode("#F3C623")));
 
@@ -62,7 +74,15 @@ public class MainDashboardView extends JFrame {
         bottomToolbar.add(btnBuildRack);
         bottomToolbar.add(btnBuildPath);
 
-        add(bottomToolbar, BorderLayout.SOUTH);
+        mapCard.add(viewport, BorderLayout.CENTER);
+        mapCard.add(bottomToolbar, BorderLayout.SOUTH);
+
+        cardsContainer.add(dashboardView, "DASHBOARD");
+        cardsContainer.add(mapCard, "MAP");
+
+        add(cardsContainer, BorderLayout.CENTER);
+
+        navToDashboard();
     }
 
     private JButton createGameButton(String text) {
@@ -77,18 +97,35 @@ public class MainDashboardView extends JFrame {
     }
 
     public void updateViewportRoom(DataCenterRoom room) {
-        remove(viewport);
+        dashboardView.updateData(room);
+
+        JPanel mapCard = (JPanel) cardsContainer.getComponent(1);
+        mapCard.remove(viewport);
         viewport = new Viewport(room);
-        add(viewport, BorderLayout.CENTER);
+        mapCard.add(viewport, BorderLayout.CENTER);
+
         revalidate();
         repaint();
     }
 
-    public void setDashboardTitle(String roomName) {
-        lblTitle.setText("<html>Data Center Dashboard<br>Room: " + roomName + "</html>");
-        setTitle("Dashboard - " + roomName);
+    public void navToDashboard() {
+        cardLayout.show(cardsContainer, "DASHBOARD");
     }
 
+    public void navToMap() {
+        cardLayout.show(cardsContainer, "MAP");
+    }
+
+    public void setDashboardTitle(String roomName) {
+        setTitle("DataCoreLIB - " + roomName);
+    }
+
+    public JMenuItem getItemNavDashboard() {
+        return itemNavDashboard;
+    }
+    public JMenuItem getItemNavMap() {
+        return itemNavMap;
+    }
     public Viewport getViewport() {
         return viewport;
     }

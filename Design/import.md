@@ -77,7 +77,7 @@ import javax.swing.SwingUtilities;
 E. Package: controller
 1. MainController.java
 
-import view.MainDashboardView;
+import view.BaseView;
 
 import model.DataCenterRoom;
 

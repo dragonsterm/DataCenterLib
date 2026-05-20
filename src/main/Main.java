@@ -8,7 +8,7 @@ import controller.MainController;
 import model.DataCenterRoom;
 import dao.RoomDAO;
 import model.ServerRack;
-import view.MainDashboardView;
+import view.BaseView;
 
 import javax.swing.SwingUtilities;
 
@@ -39,11 +39,11 @@ public class Main {
                 mainRoom.addPath(path);
             }
 
-            MainDashboardView dashboardView = new MainDashboardView();
+            BaseView dashboardView = new BaseView();
             MainController appController = new MainController(dashboardView, mainRoom);
 
             appController.initController();
         });
     }
-    
+
 }

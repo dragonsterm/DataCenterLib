@@ -1,13 +1,13 @@
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
  */
 package controller;
 
 import dao.RoomDAO;
 import dao.RackDAO;
 import model.DataCenterRoom;
-import view.MainDashboardView;
+import view.BaseView;
 import view.Viewport;
 
 import javax.swing.*;
@@ -19,16 +19,26 @@ import java.util.List;
  * @author mahar
  */
 public class MainController {
-    private MainDashboardView mainView;
+    private BaseView mainView;
     private DataCenterRoom dataCenterModel;
 
-    public MainController(MainDashboardView mainView, DataCenterRoom dataCenterModel) {
+    public MainController(BaseView mainView, DataCenterRoom dataCenterModel) {
         this.mainView = mainView;
         this.dataCenterModel = dataCenterModel;
     }
 
     public void initController() {
         mainView.updateViewportRoom(dataCenterModel);
+        mainView.setDashboardTitle(dataCenterModel.getRoomName());
+
+        mainView.getItemNavDashboard().addActionListener(e -> {
+            mainView.navToDashboard();
+            mainView.updateViewportRoom(dataCenterModel);
+        });
+
+        mainView.getItemNavMap().addActionListener(e -> {
+            mainView.navToMap();
+        });
 
         mainView.getBtnSelect().addActionListener(e -> {
             mainView.getViewport().setMode(Viewport.Mode.SELECT);
