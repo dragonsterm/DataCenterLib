@@ -28,6 +28,35 @@ public class ServerDetailView extends JPanel {
     private JLabel lblCpuName;
     private JLabel lblOsType;
 
+    private JLabel lblStatus;
+    private StatusIcon statusIcon;
+
+    private class StatusIcon implements Icon {
+        private Color color = Color.GRAY;
+
+        public void setColor(Color c) {
+            this.color = c;
+        }
+
+        @Override
+        public void paintIcon(Component c, Graphics g, int x, int y) {
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(color);
+            g2.fillOval(x, y + 2, 12, 12);
+        }
+
+        @Override
+        public int getIconWidth() {
+            return 15;
+        }
+
+        @Override
+        public int getIconHeight() {
+            return 15;
+        }
+    }
+
     public ServerDetailView() {
         setLayout(new BorderLayout());
 
@@ -41,10 +70,15 @@ public class ServerDetailView extends JPanel {
         lblServerId = new JLabel("ID: - | Model: -");
         lblCpuName = new JLabel("CPU Name: - | Cores: -");
         lblOsType = new JLabel("OS: -");
-        
+
+        statusIcon = new StatusIcon();
+        lblStatus = new JLabel("Status: -", statusIcon, SwingConstants.LEFT);
+        lblStatus.setFont(new Font("Arial", Font.BOLD, 14));
+
         lblServerId.setAlignmentX(Component.LEFT_ALIGNMENT);
         lblCpuName.setAlignmentX(Component.LEFT_ALIGNMENT);
         lblOsType.setAlignmentX(Component.LEFT_ALIGNMENT);
+        lblStatus.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         pbCpuUtilization = createCustomBar("CPU Utilization");
         pbRamUtilization = createCustomBar("RAM Utilization");
@@ -55,7 +89,11 @@ public class ServerDetailView extends JPanel {
         detailPanel.add(lblCpuName);
         detailPanel.add(Box.createVerticalStrut(5));
         detailPanel.add(lblOsType);
+
         detailPanel.add(Box.createVerticalStrut(15));
+        detailPanel.add(lblStatus);
+        detailPanel.add(Box.createVerticalStrut(15));
+
         detailPanel.add(pbCpuUtilization);
         detailPanel.add(Box.createVerticalStrut(5));
         detailPanel.add(pbRamUtilization);
@@ -65,7 +103,7 @@ public class ServerDetailView extends JPanel {
         // tab 2
         JPanel editPanel = new JPanel(new GridLayout(4, 2, 5, 10));
         editPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        
+
         cbStatus = new JComboBox<>(new String[]{"Online", "Offline", "Maintenance"});
         txtInputCpu = new JTextField(5);
         txtInputRam = new JTextField(5);
@@ -76,7 +114,7 @@ public class ServerDetailView extends JPanel {
         editPanel.add(new JLabel("Set CPU (%):")); editPanel.add(txtInputCpu);
         editPanel.add(new JLabel("Set RAM (%):")); editPanel.add(txtInputRam);
         editPanel.add(new JLabel("Set Storage (GB):")); editPanel.add(txtInputStorage);
-        
+
         JPanel bottomBtnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         bottomBtnPanel.add(btnSetUtil);
 
@@ -103,7 +141,22 @@ public class ServerDetailView extends JPanel {
         lblServerId.setText("ID: " + s.getIdAsset() + " | Model: " + s.getModelName());
         lblCpuName.setText("CPU Name: " + (s.getCpuName() != null ? s.getCpuName() : "Unknown") + " | Cores: " + s.getCpuCores() + " | RAM: " + s.getTotalRamGB() + " GB");
         lblOsType.setText("OS: " + s.getOsType() + " | Storage: " + s.getTotalStorageGB() + " GB");
-        
+
+        String currentStatus = s.getStatus() != null ? s.getStatus() : "Unknown";
+        lblStatus.setText("Status: " + currentStatus);
+
+        if ("Online".equalsIgnoreCase(currentStatus)) {
+            statusIcon.setColor(Color.decode("#10B981"));
+        } else if ("Offline".equalsIgnoreCase(currentStatus)) {
+            statusIcon.setColor(Color.decode("#EF4444"));
+        } else if ("Maintenance".equalsIgnoreCase(currentStatus)) {
+            statusIcon.setColor(Color.decode("#F59E0B"));
+        } else {
+            statusIcon.setColor(Color.GRAY);
+        }
+
+        lblStatus.repaint();
+
         cbStatus.setSelectedItem(s.getStatus());
         txtInputCpu.setText(String.valueOf(s.getCpuUtilization()));
         txtInputRam.setText(String.valueOf(s.getRamUtilization()));
@@ -112,6 +165,9 @@ public class ServerDetailView extends JPanel {
         updateCpuBar(s.getCpuUtilization());
         updateRamBar(s.getRamUtilization());
         updateStorageBar(s.getUsedStorageGB(), s.getTotalStorageGB());
+
+        revalidate();
+        repaint();
     }
 
     public void updateCpuBar(double util) {

@@ -23,12 +23,17 @@ public class ServerController {
     private MonitorThread statThread;
 
     private Server currentServer;
+    private Runnable onUpdateSuccess;
 
     public ServerController(ServerDAO serverDAO) {
         this.serverDAO = serverDAO;
         this.serverView = new ServerDetailView();
 
         initViewListeners();
+    }
+
+    public void setOnUpdateSuccessCallback(Runnable onUpdateSuccess) {
+        this.onUpdateSuccess = onUpdateSuccess;
     }
 
     private void initViewListeners() {
@@ -81,8 +86,12 @@ public class ServerController {
             boolean isSuccess = serverDAO.update(currentServer);
 
             if (isSuccess) {
-                JOptionPane.showMessageDialog(serverView, "Server Data" + currentServer.getIdAsset() + " Successfully Updated");
+                JOptionPane.showMessageDialog(serverView, "Server Data " + currentServer.getIdAsset() + " Successfully Updated");
                 serverView.displayServerStats(currentServer);
+                if (onUpdateSuccess != null) {
+                    onUpdateSuccess.run();
+                }
+
             } else {
                 JOptionPane.showMessageDialog(serverView, "Failed to Update");
             }

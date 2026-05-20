@@ -82,6 +82,15 @@ public class RackController {
                 String serverId = extractServerIdFromSlotData(slotData);
                 if (serverId != null) {
                     ServerController sc = new ServerController(serverDAO);
+                    sc.setOnUpdateSuccessCallback(() -> {
+                        Server updatedServer = serverDAO.read(serverId);
+                        if (updatedServer != null) {
+                            currentRack.removeEquipment(serverId);
+                            currentRack.addEquipment(updatedServer, updatedServer.getStartSlot());
+                        }
+                        rackView.renderRackSlots(currentRack);
+                    });
+
                     sc.loadServerInfo(serverId);
                 }
             }
