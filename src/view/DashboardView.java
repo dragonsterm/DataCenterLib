@@ -112,7 +112,7 @@ public class DashboardView extends JPanel {
         cardsPanel.setBackground(Color.decode("#F3F4F6"));
         cardsPanel.setPreferredSize(new Dimension(0, 130));
 
-        String availHtml = String.format("<html><span style='font-size:26px; color:#10B981'><b>%d</b></span> Online<br><span style='font-size:12px; color:#6B7280'>%d Offline | %d Maint</span></html>", onlineServers, offlineServers, maintServers);
+        String availHtml = String.format("<html><span style='font-size:26px; color:#10B981'><b>%d</b></span> Online<br><span style='font-size:12px; color:#6B7280'>%d Offline | %d Maintenance</span></html>", onlineServers, offlineServers, maintServers);
         cardsPanel.add(createSummaryCard("Server Availability", availHtml, "Total: " + totalServers + " Devices"));
 
         int spacePct = totalCapacityU > 0 ? (usedCapacityU * 100 / totalCapacityU) : 0;
