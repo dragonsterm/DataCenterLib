@@ -54,6 +54,10 @@ public class MainController {
             mainView.getViewport().setMode(Viewport.Mode.BUILD_PATH);
             highlightActiveButton(mainView.getBtnBuildPath());
         });
+        mainView.getBtnDemolish().addActionListener(e -> {
+            mainView.getViewport().setMode(Viewport.Mode.DEMOLISH);
+            highlightActiveButton(mainView.getBtnDemolish());
+        });
 
         highlightActiveButton(mainView.getBtnSelect());
 
@@ -129,6 +133,7 @@ public class MainController {
         mainView.getBtnSelect().setBackground(Color.decode("#4F545C"));
         mainView.getBtnBuildRack().setBackground(Color.decode("#4F545C"));
         mainView.getBtnBuildPath().setBackground(Color.decode("#4F545C"));
+        mainView.getBtnDemolish().setBackground(Color.decode("#C0392B"));
 
         activeBtn.setBackground(Color.decode("#F3C623"));
         activeBtn.setForeground(Color.BLACK);
@@ -136,5 +141,6 @@ public class MainController {
         if(activeBtn != mainView.getBtnSelect()) mainView.getBtnSelect().setForeground(Color.WHITE);
         if(activeBtn != mainView.getBtnBuildRack()) mainView.getBtnBuildRack().setForeground(Color.WHITE);
         if(activeBtn != mainView.getBtnBuildPath()) mainView.getBtnBuildPath().setForeground(Color.WHITE);
+        if(activeBtn != mainView.getBtnDemolish()) mainView.getBtnDemolish().setForeground(Color.WHITE);
     }
 }

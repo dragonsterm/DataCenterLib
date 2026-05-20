@@ -1,3 +1,7 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
+ */
 package dao;
 
 import model.RoomPath;
@@ -5,6 +9,10 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ *
+ * @author mahar
+ */
 public class PathDAO {
     private Connection connection;
 
@@ -46,5 +54,21 @@ public class PathDAO {
             e.printStackTrace();
         }
         return paths;
+    }
+
+    public boolean deletePath(int xCoord, int yCoord, String roomName) {
+        RoomDAO roomDAO = new RoomDAO();
+        int roomId = roomDAO.getRoomIdByName(roomName);
+
+        String sql = "DELETE FROM room_path WHERE id_room = ? AND x_coord = ? AND y_coord = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, roomId);
+            stmt.setInt(2, xCoord);
+            stmt.setInt(3, yCoord);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

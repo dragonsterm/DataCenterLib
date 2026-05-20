@@ -1,6 +1,6 @@
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
  */
 package view;
 
@@ -35,7 +35,8 @@ public class Viewport extends JPanel {
 
     private boolean upPressed, downPressed, leftPressed, rightPressed;
     private Timer cameraTimer;
-    public enum Mode { SELECT, BUILD_RACK, BUILD_PATH }
+
+    public enum Mode { SELECT, BUILD_RACK, BUILD_PATH, DEMOLISH }
     private Mode currentMode = Mode.SELECT;
 
     private Timer interactionTimer;
@@ -85,7 +86,6 @@ public class Viewport extends JPanel {
     private void setupKeyboardInteractions() {
         InputMap im = getInputMap(WHEN_IN_FOCUSED_WINDOW);
         ActionMap am = getActionMap();
-
         im.put(KeyStroke.getKeyStroke("pressed W"), "up_pressed");
         im.put(KeyStroke.getKeyStroke("released W"), "up_released");
         im.put(KeyStroke.getKeyStroke("pressed A"), "left_pressed");
@@ -125,7 +125,7 @@ public class Viewport extends JPanel {
                 holdMouseY = e.getY();
                 isClicking = true;
 
-                if (SwingUtilities.isLeftMouseButton(e)) {
+                if (SwingUtilities.isLeftMouseButton(e) && currentMode == Mode.SELECT) {
                     holdProgress = 0;
                     interactionTimer.restart();
                 }
@@ -140,7 +140,31 @@ public class Viewport extends JPanel {
                 if (SwingUtilities.isLeftMouseButton(e)) {
                     Point gridPos = screenToGrid(e.getX(), e.getY());
 
-                    if (!isHoldingRack && holdProgress < 100) {
+                    if (currentMode == Mode.DEMOLISH) {
+                        ServerRack clickedRack = getRackAt(gridPos.x, gridPos.y);
+                        if (clickedRack != null) {
+                            int confirm = JOptionPane.showConfirmDialog(Viewport.this,
+                                    "Do You want to Demolish this Rack Server '" + clickedRack.getRackId() + "'?\nEvery Server in this rack will get deleted permanently",
+                                    "Confirm Demolish", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+
+                            if (confirm == JOptionPane.YES_OPTION) {
+                                RackDAO rackDAO = new RackDAO();
+                                if (rackDAO.delete(clickedRack.getRackId())) {
+                                    room.getAllRacks().remove(clickedRack);
+                                } else {
+                                    JOptionPane.showMessageDialog(Viewport.this, "Gagal menghapus Rak dari database.");
+                                }
+                            }
+                        } else {
+                            RoomPath clickedPath = getPathAt(gridPos.x, gridPos.y);
+                            if (clickedPath != null) {
+                                PathDAO pathDAO = new PathDAO();
+                                if (pathDAO.deletePath(gridPos.x, gridPos.y, room.getRoomName())) {
+                                    room.getPaths().remove(clickedPath);
+                                }
+                            }
+                        }
+                    } else if (!isHoldingRack && holdProgress < 100) {
                         if (currentMode == Mode.BUILD_PATH) {
                             buildPath(gridPos.x, gridPos.y);
                         } else if (currentMode == Mode.BUILD_RACK) {
@@ -175,7 +199,6 @@ public class Viewport extends JPanel {
             public void mouseDragged(MouseEvent e) {
                 lastMouseX = e.getX();
                 lastMouseY = e.getY();
-
                 if (interactionTimer.isRunning() && !isHoldingRack) {
                     int distFromStartX = e.getX() - holdMouseX;
                     int distFromStartY = e.getY() - holdMouseY;
@@ -186,14 +209,11 @@ public class Viewport extends JPanel {
                 }
                 repaint();
             }
-
             @Override
             public void mouseMoved(MouseEvent e) {
                 lastMouseX = e.getX();
                 lastMouseY = e.getY();
-                if (currentMode == Mode.BUILD_RACK || currentMode == Mode.BUILD_PATH) {
-                    repaint();
-                }
+                repaint();
             }
         });
     }
@@ -209,11 +229,15 @@ public class Viewport extends JPanel {
         return null;
     }
 
-    private boolean isPathAt(int gridX, int gridY) {
+    private RoomPath getPathAt(int gridX, int gridY) {
         for (RoomPath p : room.getPaths()) {
-            if (p.getXCoord() == gridX && p.getYCoord() == gridY) return true;
+            if (p.getXCoord() == gridX && p.getYCoord() == gridY) return p;
         }
-        return false;
+        return null;
+    }
+
+    private boolean isPathAt(int gridX, int gridY) {
+        return getPathAt(gridX, gridY) != null;
     }
 
     private boolean canPlaceRack(int startX, int startY, ServerRack ignoreRack) {
@@ -277,8 +301,6 @@ public class Viewport extends JPanel {
                     JOptionPane.showMessageDialog(this, "Kapasitas harus berupa angka!");
                 }
             }
-        } else {
-            JOptionPane.showMessageDialog(this, "Area tidak valid! Menabrak objek lain atau batas.");
         }
     }
 
@@ -290,10 +312,7 @@ public class Viewport extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
-
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        g2d.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
 
         g2d.translate(-cameraX, -cameraY);
 
@@ -347,7 +366,21 @@ public class Viewport extends JPanel {
         }
 
         Point hoverGrid = screenToGrid(lastMouseX, lastMouseY);
-        if (currentMode == Mode.BUILD_RACK || isHoldingRack) {
+        if (currentMode == Mode.DEMOLISH) {
+            ServerRack hoverRack = getRackAt(hoverGrid.x, hoverGrid.y);
+            if (hoverRack != null) {
+                g2d.setColor(new Color(231, 76, 60, 150));
+                g2d.fillRect(hoverRack.getLocation().getxCoordinate() * TILE_SIZE,
+                        hoverRack.getLocation().getyCoordinate() * TILE_SIZE,
+                        TILE_SIZE * 3, TILE_SIZE * 3);
+            } else if (isPathAt(hoverGrid.x, hoverGrid.y)) {
+                g2d.setColor(new Color(231, 76, 60, 150));
+                g2d.fillRect(hoverGrid.x * TILE_SIZE, hoverGrid.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            } else {
+                g2d.setColor(new Color(231, 76, 60, 80));
+                g2d.fillRect(hoverGrid.x * TILE_SIZE, hoverGrid.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            }
+        } else if (currentMode == Mode.BUILD_RACK || isHoldingRack) {
             boolean valid = canPlaceRack(hoverGrid.x, hoverGrid.y, selectedRackToMove);
             g2d.setColor(valid ? new Color(46, 204, 113, 150) : new Color(231, 76, 60, 150));
             g2d.fillRect(hoverGrid.x * TILE_SIZE, hoverGrid.y * TILE_SIZE, TILE_SIZE * 3, TILE_SIZE * 3);
@@ -366,7 +399,6 @@ public class Viewport extends JPanel {
 
             g2d.setColor(new Color(0, 0, 0, 120));
             g2d.setStroke(new BasicStroke(5, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-
             g2d.draw(new Ellipse2D.Double(cx, cy, radius * 2, radius * 2));
 
             g2d.setColor(Color.WHITE);

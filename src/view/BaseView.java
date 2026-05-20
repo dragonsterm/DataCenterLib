@@ -25,6 +25,7 @@ public class BaseView extends JFrame {
     private JButton btnSelect;
     private JButton btnBuildRack;
     private JButton btnBuildPath;
+    private JButton btnDemolish;
 
     public BaseView() {
         setTitle("DataCoreLib");
@@ -69,10 +70,13 @@ public class BaseView extends JFrame {
         btnSelect = createGameButton("Pointer (Select)");
         btnBuildRack = createGameButton("Build Rack (3x3)");
         btnBuildPath = createGameButton("Build Path (1x1)");
+        btnDemolish = createGameButton("Demolish (Delete)");
+        btnDemolish.setBackground(Color.decode("#C0392B"));
 
         bottomToolbar.add(btnSelect);
         bottomToolbar.add(btnBuildRack);
         bottomToolbar.add(btnBuildPath);
+        bottomToolbar.add(btnDemolish);
 
         mapCard.add(viewport, BorderLayout.CENTER);
         mapCard.add(bottomToolbar, BorderLayout.SOUTH);
@@ -143,5 +147,8 @@ public class BaseView extends JFrame {
     }
     public JMenuItem getItemAddRoom() {
         return itemAddRoom;
+    }
+    public JButton getBtnDemolish() {
+        return btnDemolish;
     }
 }

@@ -1,11 +1,21 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
+ */
 package dao;
 
 import model.ServerRack;
 import model.GridLocation;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
+/**
+ *
+ * @author mahar
+ */
 public class RackDAO {
     private Connection connection;
 
@@ -34,13 +44,11 @@ public class RackDAO {
     }
 
     public java.util.List<ServerRack> getRacksByRoom(String roomName) {
-        java.util.List<ServerRack> racks = new java.util.ArrayList<>();
-
+        java.util.List<ServerRack> racks = new ArrayList<>();
         String sql = "SELECT sr.* FROM server_rack sr JOIN data_center_room dcr ON sr.id_room = dcr.id_room WHERE dcr.room_name = ?";
-        try (java.sql.PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, roomName);
-
-            try (java.sql.ResultSet rs = stmt.executeQuery()) {
+            try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String rackId = rs.getString("rack_id");
                     int maxCapacity = rs.getInt("max_capacity_u");
@@ -72,6 +80,26 @@ public class RackDAO {
             stmt.setInt(1, newX);
             stmt.setInt(2, newY);
             stmt.setString(3, rackId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean delete(String rackId) {
+        String sqlServer = "DELETE FROM server WHERE rack_id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sqlServer)) {
+            stmt.setString(1, rackId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        String sqlRack = "DELETE FROM server_rack WHERE rack_id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sqlRack)) {
+            stmt.setString(1, rackId);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
