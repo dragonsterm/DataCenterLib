@@ -268,7 +268,7 @@ public class Viewport extends JPanel {
     private void buildRack(int x, int y) {
         if (canPlaceRack(x, y, null)) {
             JTextField txtRackId = new JTextField();
-            JTextField txtMaxCapacity = new JTextField("42");
+            JTextField txtMaxCapacity = new JTextField("16");
             JTextField txtZone = new JTextField("ZONA A");
 
             Object[] message = {
