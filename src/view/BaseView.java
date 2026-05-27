@@ -124,7 +124,7 @@ public class BaseView extends JFrame {
     }
 
     public void setDashboardTitle(String roomName) {
-        setTitle("DataCoreLIB - " + roomName);
+        setTitle("DataCoreLib - " + roomName);
     }
 
     public JMenuItem getItemNavDashboard() {
