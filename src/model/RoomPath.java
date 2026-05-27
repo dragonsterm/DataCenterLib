@@ -21,6 +21,10 @@ public class RoomPath {
         this.yCoord = yCoord;
     }
 
+    public RoomPath(int xCoord, int yCoord) {
+        this(-1, -1, xCoord, yCoord);
+    }
+
     public int getXCoord() {
         return xCoord;
     }

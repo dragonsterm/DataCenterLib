@@ -30,6 +30,12 @@ public class DataCenterRoom {
         }
     }
 
+    public void addRack(List<ServerRack> newRacks) {
+        for (ServerRack rack : newRacks) {
+            this.addRack(rack);
+        }
+    }
+
     public ServerRack findRackById(String rackId) {
         for (ServerRack rack : racks) {
             if (rack.getRackId().equals(rackId)) {

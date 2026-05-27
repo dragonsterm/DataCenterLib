@@ -19,6 +19,10 @@ public class GridLocation {
         this.zoneName = zoneName;
     }
 
+    public GridLocation(int xCoordinate, int yCoordinate) {
+        this(xCoordinate, yCoordinate, "Unassigned");
+    }
+
     public void setCoordinates(int x, int y) {
         this.xCoordinate = x;
         this.yCoordinate = y;
