@@ -28,7 +28,7 @@ public class Main {
         SwingUtilities.invokeLater(() -> {
             RoomDAO roomDAO = new RoomDAO();
             List<String> allRooms = roomDAO.getAllRoomNames();
-            String roomToLoad = "Alpha Core Room";
+            String roomToLoad = "Default Room";
 
             if (allRooms.isEmpty()) {
 

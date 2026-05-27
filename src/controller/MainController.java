@@ -126,6 +126,35 @@ public class MainController {
             }
         });
 
+        mainView.getItemPurgeRoom().addActionListener(e -> {
+            String currentRoomName = dataCenterModel.getRoomName();
+            if (currentRoomName.equals("Temp")) {
+                JOptionPane.showMessageDialog(mainView, "Cannot purge a temporary room.");
+                return;
+            }
+
+            int confirm = JOptionPane.showConfirmDialog(
+                    mainView,
+                    "Are you sure you want to PURGE room '" + currentRoomName + "'?\nThis will delete ALL servers, racks, and paths permanently.",
+                    "Confirm Purge Room",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE
+            );
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                RoomDAO roomDAO = new RoomDAO();
+                if (roomDAO.purgeRoomContent(currentRoomName)) {
+                    dataCenterModel.getAllRacks().clear();
+                    dataCenterModel.getPaths().clear();
+
+                    mainView.updateViewportRoom(dataCenterModel);
+                    JOptionPane.showMessageDialog(mainView, "Room '" + currentRoomName + "' has been successfully purged!");
+                } else {
+                    JOptionPane.showMessageDialog(mainView, "Failed to purge room contents from the database.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
         mainView.setVisible(true);
     }
 

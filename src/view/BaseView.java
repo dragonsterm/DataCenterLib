@@ -19,6 +19,7 @@ public class BaseView extends JFrame {
     private JMenuItem itemNavMap;
     private JPanel cardsContainer;
     private CardLayout cardLayout;
+    private JMenuItem itemPurgeRoom;
     private DashboardView dashboardView;
     private Viewport viewport;
     private JPanel bottomToolbar;
@@ -48,7 +49,9 @@ public class BaseView extends JFrame {
 
         JMenu menuTools = new JMenu("Settings");
         itemAddRoom = new JMenuItem("Add Data Center Room");
+        itemPurgeRoom = new JMenuItem("Purge Current Room");
         menuTools.add(itemAddRoom);
+        menuTools.add(itemPurgeRoom);
 
         menuBar.add(menuNav);
         menuBar.add(menuHome);
@@ -150,5 +153,8 @@ public class BaseView extends JFrame {
     }
     public JButton getBtnDemolish() {
         return btnDemolish;
+    }
+    public JMenuItem getItemPurgeRoom() {
+        return itemPurgeRoom;
     }
 }

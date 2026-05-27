@@ -79,4 +79,49 @@ public class RoomDAO {
         }
         return new DataCenterRoom(roomName);
     }
+
+    public boolean purgeRoomContent(String roomName) {
+        int roomId = getRoomIdByName(roomName);
+        if (roomId == -1) return false;
+
+        boolean success = false;
+        try {
+            connection.setAutoCommit(false);
+
+            String delServers = "DELETE FROM server WHERE rack_id IN (SELECT rack_id FROM server_rack WHERE id_room = ?)";
+            try (PreparedStatement stmt = connection.prepareStatement(delServers)) {
+                stmt.setInt(1, roomId);
+                stmt.executeUpdate();
+            }
+
+            String delRacks = "DELETE FROM server_rack WHERE id_room = ?";
+            try (PreparedStatement stmt = connection.prepareStatement(delRacks)) {
+                stmt.setInt(1, roomId);
+                stmt.executeUpdate();
+            }
+
+            String delPaths = "DELETE FROM room_path WHERE id_room = ?";
+            try (PreparedStatement stmt = connection.prepareStatement(delPaths)) {
+                stmt.setInt(1, roomId);
+                stmt.executeUpdate();
+            }
+
+            connection.commit();
+            success = true;
+        } catch (SQLException e) {
+            try {
+                connection.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            e.printStackTrace();
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return success;
+    }
 }
