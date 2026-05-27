@@ -45,7 +45,7 @@ public class RackDetailView extends JDialog {
         topInfoPanel.setLayout(new BoxLayout(topInfoPanel, BoxLayout.Y_AXIS));
         topInfoPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        lblRackInfo = new JLabel("Rack ID: - | Capacity: - Servers Unit");
+        lblRackInfo = new JLabel("Rack ID: - | Capacity: - U");
         lblRackZone = new JLabel("Location Zone: -");
         lblRackInfo.setAlignmentX(Component.CENTER_ALIGNMENT);
         lblRackZone.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -96,7 +96,7 @@ public class RackDetailView extends JDialog {
 
         int usedU = rack.getMaxCapacityU() - rack.getAvailableU();
 
-        lblRackInfo.setText("Rack Name: " + rack.getRackId() + "  |  Capacity: " + usedU + "/" + rack.getMaxCapacityU() + " U");
+        lblRackInfo.setText("Rack Name: " + rack.getRackId() + "  |  Capacity: " + usedU + "/" + rack.getMaxCapacityU() + " Server Unit");
 
         if (rack.getLocation() != null) {
             lblRackZone.setText("Zone: " + rack.getLocation().getZoneName() +
