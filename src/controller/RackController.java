@@ -160,11 +160,30 @@ public class RackController {
             }
         }
 
-        batchFormView.getBtnExecute().addActionListener(e -> {
+                batchFormView.getBtnExecute().addActionListener(e -> {
             List<model.Server> dataInput = batchFormView.getBatchData();
             String target = batchFormView.getSelectedTargetRack();
 
             if (dataInput != null && !dataInput.isEmpty()) {
+                if (operationType.equalsIgnoreCase("MOVE") && target != null && !target.isEmpty() && roomModel != null) {
+                    ServerRack targetRack = roomModel.findRackById(target);
+                    if (targetRack != null) {
+                        int totalRequiredU = 0;
+                        for (Server s : dataInput) {
+                            totalRequiredU += s.getSizeInU();
+                        }
+                        
+                        if (targetRack.getAvailableU() < totalRequiredU) {
+                            JOptionPane.showMessageDialog(batchFormView, 
+                                "Target rack '" + targetRack.getRackId() + "' capacity is not enough to hold all servers!\n" +
+                                "Required space: " + totalRequiredU + " U\nAvailable space: " + targetRack.getAvailableU() + " U", 
+                                "Insufficient Capacity", 
+                                JOptionPane.WARNING_MESSAGE);
+                            return;
+                        }
+                    }
+                }
+
                 List<Integer> availableSlots = new ArrayList<>();
                 String[] visual = currentRack.getVisualRepresentation();
                 for (int j = 0; j < visual.length; j++) {
@@ -201,7 +220,6 @@ public class RackController {
                 executeBatchOperation(operationType, dataInput, target);
             }
         });
-
         batchFormView.setVisible(true);
     }
 
