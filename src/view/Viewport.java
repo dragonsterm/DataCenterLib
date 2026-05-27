@@ -344,9 +344,20 @@ public class Viewport extends JPanel {
             int ry = r.getLocation().getyCoordinate() * TILE_SIZE;
             int rSize = TILE_SIZE * 3;
 
+            int maxU = r.getMaxCapacityU();
+            int usedU = maxU - r.getAvailableU();
+
             g2d.setColor(Color.decode("#1A252F"));
             g2d.fillRect(rx, ry, rSize, rSize);
-            g2d.setColor(Color.decode("#34495E"));
+
+            if (usedU == 0) {
+                g2d.setColor(Color.decode("#2ECC71")); 
+            } else if (usedU >= maxU) {
+                g2d.setColor(Color.decode("#E74C3C"));
+            } else {
+                g2d.setColor(Color.decode("#F1C40F"));
+            }
+
             g2d.fillRect(rx + 5, ry + 25, rSize - 10, rSize - 50);
 
             g2d.setColor(Color.decode("#3498DB"));
@@ -357,12 +368,9 @@ public class Viewport extends JPanel {
             g2d.setFont(new Font("SansSerif", Font.BOLD, 12));
             g2d.drawString("Rack: " + r.getRackId(), rx + 8, ry + 18);
 
-            int maxU = r.getMaxCapacityU();
-            int usedU = maxU - r.getAvailableU();
-
             g2d.setFont(new Font("Monospaced", Font.BOLD, 11));
             g2d.setColor(Color.decode("#F1C40F"));
-            g2d.drawString("Cap: " + usedU + "/" + maxU + " U", rx + 8, ry + rSize - 10);
+            g2d.drawString("Cap: " + usedU + "/" + maxU + " SU", rx + 8, ry + rSize - 10);
         }
 
         Point hoverGrid = screenToGrid(lastMouseX, lastMouseY);

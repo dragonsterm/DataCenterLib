@@ -45,7 +45,7 @@ public class RackDetailView extends JDialog {
         topInfoPanel.setLayout(new BoxLayout(topInfoPanel, BoxLayout.Y_AXIS));
         topInfoPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        lblRackInfo = new JLabel("Rack ID: - | Capacity: - U");
+        lblRackInfo = new JLabel("Rack ID: - | Capacity: - Servers Unit");
         lblRackZone = new JLabel("Location Zone: -");
         lblRackInfo.setAlignmentX(Component.CENTER_ALIGNMENT);
         lblRackZone.setAlignmentX(Component.CENTER_ALIGNMENT);
