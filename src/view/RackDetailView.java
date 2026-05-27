@@ -32,7 +32,12 @@ public class RackDetailView extends JDialog {
 
     public RackDetailView() {
         setTitle("Rack Detail");
-        setSize(600, 700);
+
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int maxHeight = screenSize.height - 100;
+        int preferredHeight = Math.min(700, maxHeight);
+        
+        setSize(600, preferredHeight);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
