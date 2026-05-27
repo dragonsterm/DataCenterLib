@@ -9,6 +9,11 @@ import model.ServerRack;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
+import java.awt.geom.Arc2D;
+import java.awt.geom.Ellipse2D;
 import java.util.List;
 
 /**
@@ -28,7 +33,24 @@ public class RackDetailView extends JDialog {
     private JLabel lblRackZone;
     private JLabel lblInstruction;
     private JPanel actionPanel;
+    
+    private Timer interactionTimer;
+    private int holdProgress = 0;
+    private boolean isHoldingServer = false;
+    private boolean isClicking = false;
+    private HardwareEquipment selectedServerToMove = null;
+    private int selectedStartSlot = -1;
+    private int lastMouseX, lastMouseY;
+    private int holdMouseX, holdMouseY;
+    
+    public interface ServerMoveListener {
+        void onServerMovedWithinRack(String serverId, int oldStartSlot, int targetStartSlot);
+    }
+    private ServerMoveListener serverMoveListener;
 
+    public void setServerMoveListener(ServerMoveListener listener) {
+        this.serverMoveListener = listener;
+    }
 
     public RackDetailView() {
         setTitle("Rack Detail");
@@ -36,7 +58,7 @@ public class RackDetailView extends JDialog {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int maxHeight = screenSize.height - 100;
         int preferredHeight = Math.min(700, maxHeight);
-        
+
         setSize(600, preferredHeight);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
@@ -75,12 +97,55 @@ public class RackDetailView extends JDialog {
 
         add(actionPanel, BorderLayout.SOUTH);
 
-        slotsVisualPanel = new JPanel();
+        slotsVisualPanel = new JPanel() {
+            @Override
+            public void paint(Graphics g) {
+                super.paint(g);
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                if (isClicking && !isHoldingServer && holdProgress > 0) {
+                    double radius = 18.0;
+                    double cx = holdMouseX - radius;
+                    double cy = holdMouseY - radius;
+
+                    g2d.setColor(new Color(0, 0, 0, 120));
+                    g2d.setStroke(new BasicStroke(5, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                    g2d.draw(new Ellipse2D.Double(cx, cy, radius * 2, radius * 2));
+
+                    g2d.setColor(Color.WHITE);
+                    double angle = 360.0 * (holdProgress / 100.0);
+                    g2d.draw(new Arc2D.Double(cx, cy, radius * 2, radius * 2, 90, -angle, Arc2D.OPEN));
+                } else if (isHoldingServer && selectedServerToMove != null) {
+                    g2d.setColor(new Color(46, 204, 113, 150));
+                    int h = 37 * selectedServerToMove.getSizeInU(); 
+                    g2d.fillRect(20, lastMouseY - h/2, getWidth() - 40, h);
+                    
+                    g2d.setColor(Color.WHITE);
+                    g2d.setStroke(new BasicStroke(2));
+                    g2d.drawRect(20, lastMouseY - h/2, getWidth() - 40, h);
+                }
+            }
+        };
         slotsVisualPanel.setLayout(new BoxLayout(slotsVisualPanel, BoxLayout.Y_AXIS));
 
         JScrollPane scrollPane = new JScrollPane(slotsVisualPanel);
         scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         add(scrollPane, BorderLayout.CENTER);
+        
+        interactionTimer = new Timer(10, e -> {
+            if (isClicking && !isHoldingServer) {
+                if (selectedServerToMove != null) {
+                    holdProgress++;
+                    if (holdProgress >= 100) {
+                        isHoldingServer = true;
+                        holdProgress = 0;
+                    }
+                    slotsVisualPanel.repaint();
+                }
+            }
+        });
+        interactionTimer.setInitialDelay(250);
     }
 
     public void renderRackSlots(ServerRack rack) {
@@ -111,6 +176,7 @@ public class RackDetailView extends JDialog {
 
         for (int i = slotData.length - 1; i >= 0; i--) {
             final String currentSlotText = slotData[i];
+            final int slotIndex = i;
 
             JToggleButton slotBtn = new JToggleButton(currentSlotText) {
                 @Override
@@ -166,6 +232,91 @@ public class RackDetailView extends JDialog {
             }
 
             slotBtn.addActionListener(e -> fireSelectionChanged());
+            
+            slotBtn.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    if (!Boolean.TRUE.equals(slotBtn.getClientProperty("isEmpty"))) {
+                        isClicking = true;
+                        holdProgress = 0;
+                        String id = extractId(currentSlotText);
+                        for (HardwareEquipment hw : hwList) {
+                            if (hw.getIdAsset().equals(id)) {
+                                selectedServerToMove = hw;
+                                break;
+                            }
+                        }
+                        
+                        int actualStartSlot = slotIndex;
+                        for (int k = 0; k < slotData.length; k++) {
+                            if (extractId(slotData[k]).equals(id)) {
+                                actualStartSlot = k;
+                                break;
+                            }
+                        }
+                        selectedStartSlot = actualStartSlot;
+                        
+                        Point conv = SwingUtilities.convertPoint(slotBtn, e.getPoint(), slotsVisualPanel);
+                        holdMouseX = conv.x;
+                        holdMouseY = conv.y;
+                        lastMouseX = conv.x;
+                        lastMouseY = conv.y;
+                        interactionTimer.restart();
+                        slotsVisualPanel.repaint();
+                    }
+                }
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    isClicking = false;
+                    interactionTimer.stop();
+                    if (isHoldingServer && selectedServerToMove != null) {
+                        isHoldingServer = false;
+                        Point p = SwingUtilities.convertPoint(slotBtn, e.getPoint(), slotsVisualPanel);
+                        
+                        int targetSlotIndex = -1;
+                        for (int j = 0; j < slotButtons.length; j++) {
+                            if (slotButtons[j] != null) {
+                                Rectangle bounds = slotButtons[j].getBounds();
+                                if (bounds.contains(p)) {
+                                    targetSlotIndex = j;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (targetSlotIndex != -1 && serverMoveListener != null) {
+                            serverMoveListener.onServerMovedWithinRack(selectedServerToMove.getIdAsset(), selectedStartSlot, targetSlotIndex);
+                        }
+                        selectedServerToMove = null;
+                        selectedStartSlot = -1;
+                        holdProgress = 0;
+                        slotsVisualPanel.repaint();
+                    } else {
+                        holdProgress = 0;
+                        slotsVisualPanel.repaint();
+                    }
+                }
+            });
+
+            slotBtn.addMouseMotionListener(new MouseMotionAdapter() {
+                @Override
+                public void mouseDragged(MouseEvent e) {
+                    Point conv = SwingUtilities.convertPoint(slotBtn, e.getPoint(), slotsVisualPanel);
+                    lastMouseX = conv.x;
+                    lastMouseY = conv.y;
+                    
+                    if (interactionTimer.isRunning() && !isHoldingServer) {
+                        int distFromStartX = Math.abs(conv.x - holdMouseX);
+                        int distFromStartY = Math.abs(conv.y - holdMouseY);
+                        if (distFromStartX > 5 || distFromStartY > 5) {
+                            holdProgress = 0;
+                            interactionTimer.stop();
+                        }
+                    }
+                    slotsVisualPanel.repaint();
+                }
+            });
 
             slotButtons[i] = slotBtn;
             slotsVisualPanel.add(slotBtn);

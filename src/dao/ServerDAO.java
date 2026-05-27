@@ -177,4 +177,16 @@ public class ServerDAO implements ICRUD<Server> {
         server.setStartSlot(rs.getInt("start_slot"));
         return server;
     }
+
+    public boolean updateServerSlot(String idAsset, int startSlot) {
+        String query = "UPDATE server SET start_slot=? WHERE id_asset=?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, startSlot);
+            stmt.setString(2, idAsset);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

@@ -95,6 +95,29 @@ public class RackController {
                 }
             }
         });
+
+        rackView.setServerMoveListener(new RackDetailView.ServerMoveListener() {
+            @Override
+            public void onServerMovedWithinRack(String serverId, int oldStartSlot, int targetStartSlot) {
+                if (oldStartSlot == targetStartSlot) return; 
+                
+                model.Server server = serverDAO.read(serverId);
+                if (server != null) {
+                    currentRack.removeEquipment(serverId);
+                    if (currentRack.addEquipment(server, targetStartSlot)) {
+                        server.setStartSlot(targetStartSlot);
+                        serverDAO.updateServerSlot(serverId, targetStartSlot);
+                        loadVisualRack(currentRack.getRackId());
+                    } else {
+                        currentRack.addEquipment(server, oldStartSlot);
+                        JOptionPane.showMessageDialog(rackView, 
+                                "Cannot place server at slot " + targetStartSlot + ". Available space insufficient or occupied.", 
+                                "Invalid Placement", 
+                                JOptionPane.WARNING_MESSAGE);
+                    }
+                }
+            }
+        });
     }
 
     private String extractServerIdFromSlotData(String slotData) {
