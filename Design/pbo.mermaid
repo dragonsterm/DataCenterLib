@@ -1,252 +1,328 @@
 classDiagram
-    %% ENTRY POINT 
-    class Main {
-        +main(String[] args)$ void
+    %% ==========================================
+    %% MODEL PACKAGE
+    %% ==========================================
+    namespace model {
+        class IManageable {
+            <<Interface>>
+            +turnOn() void
+            +turnOff() void
+            +restart() void
+        }
+        
+        class IMonitorable {
+            <<Interface>>
+            +getTemperature() double
+            +getPowerDraw() double
+            +getStatus() String
+        }
+        
+        class HardwareEquipment {
+            <<Abstract>>
+            -idAsset String
+            -modelName String
+            -sizeInU int
+            -status String
+            +HardwareEquipment(idAsset: String, modelName: String, sizeInU: int, status: String)
+            +getDetails()* String
+            +getIdAsset() String
+            +getModelName() String
+            +getSizeInU() int
+            +getStatus() String
+            +setStatus(status: String) void
+        }
+        
+        class ComputingDevice {
+            <<Abstract>>
+            -cpuCores int
+            -totalRamGB int
+            +ComputingDevice(id: String, model: String, size: int, status: String, cpu: int, ram: int)
+            +calculateLoad()* double
+            +getCpuCores() int
+            +getTotalRamGB() int
+        }
+        
+        class Server {
+            -osType String
+            -cpuName String
+            -cpuUtilization double
+            -ramUtilization double
+            -totalStorageGB int
+            -usedStorageGB int
+            -startSlot int
+            -rackId String
+            +Server(...)
+            +getDetails() String
+            +calculateLoad() double
+            +setStatus(status: String) void
+            +getCpuName() String
+            +setCpuName(cpuName: String) void
+            +setUsedStorageGB(usedStorageGB: int) void
+            +getCpuUtilization() double
+            +setCpuUtilization(cpuUtilization: double) void
+            +getRamUtilization() double
+            +setRamUtilization(ramUtilization: double) void
+            +getOsType() String
+            +getTotalStorageGB() int
+            +getUsedStorageGB() int
+            +getStartSlot() int
+            +setStartSlot(startSlot: int) void
+            +setRackId(rackId: String) void
+            +getRackId() String
+            +getTemperature() double
+            +getPowerDraw() double
+            +turnOn() void
+            +turnOff() void
+            +restart() void
+        }
+        
+        class GridLocation {
+            -xCoordinate int
+            -yCoordinate int
+            -zoneName String
+            +GridLocation(x: int, y: int, zone: String)
+            +GridLocation(x: int, y: int)
+            +setCoordinates(x: int, y: int) void
+            +getLocationString() String
+            +getxCoordinate() int
+            +getyCoordinate() int
+            +getZoneName() String
+        }
+        
+        class ServerRack {
+            -rackId String
+            -maxCapacityU int
+            -currentUsedU int
+            -location GridLocation
+            -slots HardwareEquipment[]
+            +ServerRack(rackId: String, maxCapacityU: int, location: GridLocation)
+            +addEquipment(hw: HardwareEquipment, startSlot: int) boolean
+            +removeEquipment(idAsset: String) boolean
+            +canAccommodate(requiredU: int) boolean
+            +getAvailableU() int
+            +getVisualRepresentation() String[]
+            +getRackId() String
+            +getHardwareList() List~HardwareEquipment~
+            +getLocation() GridLocation
+            +getMaxCapacityU() int
+        }
+        
+        class RoomPath {
+            -idPath int
+            -idRoom int
+            -xCoord int
+            -yCoord int
+            +RoomPath(idPath: int, idRoom: int, xCoord: int, yCoord: int)
+            +RoomPath(xCoord: int, yCoord: int)
+            +getXCoord() int
+            +getYCoord() int
+            +getIdPath() int
+        }
+        
+        class DataCenterRoom {
+            -roomName String
+            -widthGrid int
+            -heightGrid int
+            -racks List~ServerRack~
+            -paths List~RoomPath~
+            +DataCenterRoom(roomName: String)
+            +addRack(rack: ServerRack) void
+            +addRack(newRacks: List~ServerRack~) void
+            +findRackById(rackId: String) ServerRack
+            +addPath(path: RoomPath) void
+            +setDimensions(w: int, h: int) void
+            +getPaths() List~RoomPath~
+            +getAllRacks() List~ServerRack~
+            +getRoomName() String
+            +getWidthGrid() int
+            +getHeightGrid() int
+        }
+    }
+    
+    %% Relationships Model
+    HardwareEquipment ..|> IManageable
+    HardwareEquipment ..|> IMonitorable
+    ComputingDevice --|> HardwareEquipment 
+    Server --|> ComputingDevice 
+    
+    ServerRack o-- HardwareEquipment : contains slots
+    ServerRack *-- GridLocation : located at
+    DataCenterRoom *-- ServerRack : contains
+    DataCenterRoom *-- RoomPath : contains
+
+    %% ==========================================
+    %% DAO PACKAGE
+    %% ==========================================
+    namespace dao {
+        class DatabaseConnector {
+            -instance DatabaseConnector$
+            -connection Connection
+            -DBNAME String
+            -URL_DB String
+            -USERNAME String
+            -PASSWORD String
+            -DatabaseConnector()
+            +getInstance()$ DatabaseConnector
+            +getConnection() Connection
+        }
+
+        class ICRUD~T~ {
+            <<Interface>>
+            +create(item: T) boolean
+            +read(id: String) T
+            +update(item: T) boolean
+            +delete(id: String) boolean
+            +getAll() List~T~
+        }
+
+        class PathDAO {
+            -connection Connection
+            +PathDAO()
+            +createPath(path: RoomPath, roomName: String) boolean
+            +getPathsByRoom(roomName: String) List~RoomPath~
+            +deletePath(x: int, y: int, room: String) boolean
+        }
+
+        class RackDAO {
+            -connection Connection
+            +RackDAO()
+            +create(rack: ServerRack, roomName: String) boolean
+            +getRacksByRoom(roomName: String) List~ServerRack~
+            +updateLocation(rackId: String, newX: int, newY: int) boolean
+            +delete(rackId: String) boolean
+        }
+
+        class RoomDAO {
+            -connection Connection
+            +RoomDAO()
+            +getAllRoomNames() List~String~
+            +createRoom(name: String, w: int, h: int) boolean
+            +getRoomIdByName(name: String) int
+            +getRoomByName(name: String) DataCenterRoom
+            +purgeRoomContent(roomName: String) boolean
+        }
+
+        class ServerDAO {
+            -connection Connection
+            +ServerDAO()
+            +getServersByRack(rackId: String) List~Server~
+            +moveServerRack(serverId: String, newRackId: String) boolean
+            +getNextServerId() int
+            -extractServerFromResultSet(rs: ResultSet) Server
+            +updateServerSlot(idAsset: String, startSlot: int) boolean
+        }
+    }
+    
+    ServerDAO ..|> ICRUD : implements
+
+    %% ==========================================
+    %% CONTROLLER & THREAD PACKAGE
+    %% ==========================================
+    namespace controller {
+        class MainController {
+            -mainView BaseView
+            -dataCenterModel DataCenterRoom
+            +MainController(mainView: BaseView, dataCenterModel: DataCenterRoom)
+            +initController() void
+            -highlightActiveButton(activeBtn: JButton) void
+        }
+
+        class RackController {
+            -rackView RackDetailView
+            -batchFormView BatchServerFormView
+            -serverDAO ServerDAO
+            -currentRack ServerRack
+            -roomModel DataCenterRoom
+            +RackController(roomModel: DataCenterRoom, currentRack: ServerRack, serverDAO: ServerDAO)
+            -initViewListeners() void
+            -extractServerIdFromSlotData(slotData: String) String
+            +loadVisualRack(rackId: String) void
+            +openBatchForm(operationType: String, selectedSlots: List~Integer~) void
+        }
+
+        class ServerController {
+            -serverView ServerDetailView
+            -serverDAO ServerDAO
+            -statThread MonitorThread
+            -currentServer Server
+            -onUpdateSuccess Runnable
+            +ServerController(serverDAO: ServerDAO)
+            +setOnUpdateSuccessCallback(onUpdateSuccess: Runnable) void
+            -initViewListeners() void
+            +loadServerInfo(serverId: String) void
+            +updateManualUtilization(cpu: double, ram: double, storage: int) void
+            +startMonitoring() void
+        }
+    }
+    
+    namespace thread {
+        class BatchOperationThread {
+            -operationType String
+            -serversList List~Server~
+            -targetRackId String
+            -serverDAO ServerDAO
+            -sourceRack ServerRack
+            -destinationRack ServerRack
+            -progressView BatchProgressDialog
+            -onSuccessCallback Runnable
+            +run() void
+            -processAdd() void
+            -processUpdate() void
+            -processDelete() void
+            -processMove() void
+            -updateProgress(current: int, total: int, msg: String) void
+            -simulateDelay(ms: int) void
+        }
+
+        class MonitorThread {
+            -server Server
+            -view ServerDetailView
+            -isRunning boolean
+            +MonitorThread(server: Server, view: ServerDetailView)
+            +run() void
+            +stopMonitoring() void
+        }
     }
 
-    %% INTERFACES (OOP Abstraction)
-    class IMonitorable {
-        <<interface>>
-        +getTemperature() double
-        +getPowerDraw() double
-        +getStatus() String
+    %% ==========================================
+    %% VIEW PACKAGE
+    %% ==========================================
+    namespace view {
+        class BaseView {
+            <<JFrame>>
+        }
+        class BatchProgressDialog {
+            <<JDialog>>
+        }
+        class BatchServerFormView {
+            <<JDialog>>
+        }
+        class DashboardView {
+            <<JPanel>>
+        }
+        class RackDetailView {
+            <<JDialog>>
+        }
+        class ServerDetailView {
+            <<JPanel>>
+        }
+        class Viewport {
+            <<JPanel>>
+        }
     }
-
-    class IManageable {
-        <<interface>>
-        +turnOn() void
-        +turnOff() void
-        +restart() void
-    }
-
-    class ICRUD~T~ {
-        <<interface>>
-        +create(T item) boolean
-        +read(String id) T
-        +update(T item) boolean
-        +delete(String id) boolean
-        +getAll() List~T~
-    }
-
-    %%  MODEL (OOP Inheritance & Encapsulation)
-    class HardwareEquipment {
-        <<abstract>>
-        -String idAsset
-        -String modelName
-        -int sizeInU
-        -String status
-        +getDetails()* String
-        +getIdAsset() String
-        +getSizeInU() int
-        +getStatus() String
-        +setStatus(String status) void
-    }
-    HardwareEquipment ..|> IMonitorable : implements
-    HardwareEquipment ..|> IManageable : implements
-
-    class ComputingDevice {
-        <<abstract>>
-        -int cpuCores
-        -int totalRamGB
-        +calculateLoad()* double
-        +getCpuCores() int
-        +getRam() int
-    }
-    HardwareEquipment <|-- ComputingDevice : extends
-
-    class Server {
-        -String osType
-        -double cpuUtilization
-        -double ramUtilization
-        -int totalStorageGB
-        -int usedStorageGB
-        +getDetails() String
-        +calculateLoad() double
-        +setStatus(String status) void
-        +getCpuUtilization() double
-        +getRamUtilization() double
-        +setCpuUtilization(double util) void
-        +setRamUtilization(double util) void
-        +getOsType() String
-        +getTotalStorageGB() int
-        +getUsedStorageGB() int
-    }
-    ComputingDevice <|-- Server : extends
-    %% Note: setStatus di-override di Server agar jika diset "Offline/Maintenance", utilisasi CPU & RAM = 0.
-
-    class GridLocation {
-        -int xCoordinate
-        -int yCoordinate
-        -String zoneName
-        +getLocationString() String
-    }
-
-    class ServerRack {
-        -String rackId
-        -int maxCapacityU
-        -int currentUsedU
-        -GridLocation location
-        -HardwareEquipment[] slots
-        +addEquipment(HardwareEquipment hw, int startSlot) synchronized boolean
-        +removeEquipment(String idAsset) synchronized boolean
-        +canAccommodate(int requiredU) boolean
-        +getAvailableU() int
-        +getVisualRepresentation() String[]
-        +getRackId() String
-        +getHardwareList() List~HardwareEquipment~
-    }
-    ServerRack *-- GridLocation : Composition
-    ServerRack o-- HardwareEquipment : Aggregation
-
-    class DataCenterRoom {
-        -String roomName
-        -List~ServerRack~ racks
-        +findRackById(String rackId) ServerRack
-        +getAllRacks() List~ServerRack~
-    }
-    DataCenterRoom o-- ServerRack : Aggregation
-
-    %% DATABASE / JDBC (Data Access Layer)
-    class DatabaseConnection {
-        <<Singleton>>
-        -Connection connection
-        +getInstance()$ DatabaseConnection
-        +getConnection() Connection
-    }
-
-    class ServerDAO {
-        +create(Server item) boolean
-        +read(String id) Server
-        +update(Server item) boolean
-        +delete(String id) boolean
-        +getServersByRack(String rackId) List~Server~
-        +moveServerRack(String serverId, String newRackId) boolean
-    }
-    ICRUD~Server~ <|.. ServerDAO : implements
-    ServerDAO --> DatabaseConnection : uses
-
-    %%  CONTROLLER (MVC)
-    class MainController {
-        -MainDashboardView mainView
-        -DataCenterRoom dataCenterModel
-        +initController() void
-        +loadGridRacks() void
-        +onRackClicked(String rackId) void
-    }
-
-    class RackController {
-        -RackDetailView rackView
-        -BatchServerFormView batchFormView
-        -ServerDAO serverDAO
-        -ServerRack currentRack
-        -DataCenterRoom roomModel
-        +loadVisualRack(String rackId) void
-        +openBatchForm(String operationType) void
-        +executeBatchOperation(String type, List~Server~ servers, String targetRackId) void
-    }
-
-    class ServerController {
-        -ServerDetailView serverView
-        -ServerDAO serverDAO
-        -MonitorThread statThread
-        +loadServerInfo(String serverId) void
-        +updateManualUtilization(double cpu, double ram) void
-        +startMonitoring() void
-    }
-
-    %% MULTITHREADING (Batch & Monitoring)
-    class MonitorThread {
-        <<Thread>>
-        -Server server
-        -ServerDetailView view
-        -boolean isRunning
-        +run() void
-    }
-
-    class BatchOperationThread {
-        <<Thread>>
-        -String operationType
-        -List~Server~ serversList
-        -String targetRackId
-        -ServerDAO serverDAO
-        -ServerRack sourceRack
-        -ServerRack destinationRack
-        -BatchProgressDialog progressView
-        +run() void
-        -processAdd() void
-        -processUpdate() void
-        -processDelete() void
-        -processMove() void
-    }
-
-    %% VIEW (Java Swing UI) 
-    class MainDashboardView {
-        <<JFrame>>
-        -JPanel gridPanel
-        +renderGrid(List~ServerRack~ racks) void
-    }
-
-    class RackDetailView {
-        <<JDialog>>
-        -JPanel slotsVisualPanel
-        -JButton btnBatchAdd
-        -JButton btnBatchDelete
-        -JButton btnBatchUpdate
-        -JButton btnBatchMove
-        +renderRackSlots(ServerRack rack) void
-    }
-
-    class BatchServerFormView {
-        <<JDialog>>
-        -JPanel dynamicFormPanel
-        -JButton btnAddRow
-        -JButton btnExecute
-        -JComboBox cbTargetRack
-        -int maxAllowedCapacityU
-        -int currentFormU
-        +addFormRow() void
-        +removeFormRow(JPanel row) void
-        +getBatchData() List~Server~
-        +validateCapacity() boolean
-    }
-
-    class BatchProgressDialog {
-        <<JDialog>>
-        -JProgressBar progressBar
-        -JLabel lblStatus
-        +updateProgress(int current, int total, String msg) void
-    }
-
-    class ServerDetailView {
-        <<JPanel>>
-        -JComboBox cbStatus
-        -JTextField txtInputCpu
-        -JTextField txtInputRam
-        -JButton btnSetUtil
-        -JProgressBar pbCpuUtilization
-        -JProgressBar pbRamUtilization
-        -JProgressBar pbStorage
-        +displayServerStats(Server s) void
-        +updateCpuBar(double util) void
-        +updateRamBar(double util) void
-        +updateStorageBar(int used, int total) void
-    }
-
-    %% SYSTEM RELATIONS (Wiring)
-    Main --> MainController : instantiates
-    MainController --> MainDashboardView : controls
-    MainController --> RackController : spawns
-    MainController --> DataCenterRoom : populates
-
+    
+    %% Connections across layers
+    MainController --> BaseView : controls
+    MainController --> DataCenterRoom : models
+    
     RackController --> RackDetailView : controls
-    RackController --> BatchServerFormView : controls
-    RackController --> BatchOperationThread : starts batch thread
-    RackController --> ServerDAO : queries
-    RackController --> ServerController : spawns single view
-
+    RackController --> BatchServerFormView : instantiates
+    RackController --> ServerDAO : utilizes
+    RackController --> ServerRack : manages
+    
     ServerController --> ServerDetailView : controls
-    ServerController --> MonitorThread : starts loop
-
-    BatchOperationThread --> BatchProgressDialog : updates UI via SwingUtilities
-    BatchOperationThread --> ServerDAO : batch execution
-    BatchOperationThread --> ServerRack : safely modifies
+    ServerController --> ServerDAO : utilizes
+    ServerController --> MonitorThread : manages
+    
+    MonitorThread --> ServerDetailView : updates UI
+    BatchOperationThread --> BatchProgressDialog : updates UI
